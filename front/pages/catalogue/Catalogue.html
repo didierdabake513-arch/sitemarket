@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assigamé – Catalogue des produits</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../styles/base.css">
+<link rel="stylesheet" href="../../styles/components.css">
+<link rel="stylesheet" href="../../styles/buttons.css">
+<style>
+/* ── Fond de PAGE : même carrousel photo que l'accueil, derrière tout
+   le catalogue (voir renderSiteBackground dans le script en bas). ── */
+.site-bg-carousel { position: fixed; inset: 0; z-index: -2; }
+.site-bg-slide { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transition: opacity 1.8s ease-in-out; }
+.site-bg-slide.active { opacity: 1; }
+.site-bg-overlay { position: fixed; inset: 0; z-index: -1; background: rgba(45,27,105,0.22); }
+
+.catalogue-header { position: relative; background: rgba(45,27,105,0.86); padding: 2.5rem 2rem; }
+.catalogue-header-inner { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; }
+.search-filter-row { display: flex; gap: 0.75rem; max-width: 640px; flex-wrap: wrap; }
+.search-big { display: flex; flex: 1; min-width: 260px; background: #fff; border-radius: 30px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+.search-big input { flex: 1; padding: 12px 20px; border: none; outline: none; font-size: 0.95rem; font-family: 'Inter', sans-serif; }
+.search-big button { background: #F5A623; border: none; padding: 12px 24px; cursor: pointer; font-weight: 700; color: #2D1B69; font-family: 'Sora', sans-serif; }
+
+/* ── Filtres en menu déroulant, à côté de la recherche ── */
+.filter-dropdown-wrap { position: relative; }
+.filter-toggle-btn {
+  display: flex; align-items: center; gap: 8px; height: 100%; background: #fff; border: none;
+  border-radius: 30px; padding: 12px 20px; font-weight: 700; color: #2D1B69; font-family: 'Sora', sans-serif;
+  cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,0.2); white-space: nowrap;
+}
+.filter-toggle-btn .fcount { background: #F5A623; color: #2D1B69; border-radius: 10px; padding: 1px 7px; font-size: 0.72rem; }
+.filter-dropdown-panel {
+  display: none; position: absolute; top: calc(100% + 10px); left: 0; z-index: 50;
+  background: #fff; border-radius: 14px; padding: 1.25rem; width: 280px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+}
+.filter-dropdown-panel.open { display: block; }
+.filter-group { margin-bottom: 1.25rem; }
+.filter-group:last-child { margin-bottom: 0; }
+.filter-group h4 { font-size: 0.8rem; font-weight: 700; color: #7070A0; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.6rem; }
+.filter-option { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer; }
+.filter-option input { accent-color: #2D1B69; }
+.filter-option label { font-size: 0.9rem; cursor: pointer; color: #1A1A2E; }
+.price-input-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.price-input-row input[type="number"] {
+  width: 100%; border: 2px solid #DDD9F5; border-radius: 8px; padding: 6px 8px;
+  font-size: 0.85rem; font-family: 'Inter', sans-serif; outline: none; color: #1A1A2E;
+}
+.price-input-row input[type="number"]:focus { border-color: #2D1B69; }
+.filter-reset-btn { width: 100%; margin-top: 1rem; background: none; border: 2px solid #DDD9F5; border-radius: 8px; padding: 8px; font-weight: 600; font-size: 0.85rem; color: #7070A0; cursor: pointer; }
+.filter-reset-btn:hover { border-color: #E74C3C; color: #E74C3C; }
+
+.catalogue-body {
+  max-width: 1100px; margin: 2rem auto; padding: 2rem;
+  background: rgba(255,255,255,0.95); border-radius: 24px; box-shadow: 0 10px 40px rgba(45,27,105,0.10);
+}
+.sort-bar { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem; }
+.sort-select { border: 2px solid #DDD9F5; border-radius: 8px; padding: 6px 12px; font-size: 0.85rem; outline: none; cursor: pointer; background: #fff; color: #1A1A2E; font-family: 'Inter', sans-serif; }
+
+.products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 1.5rem; }
+.product-card { background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 20px rgba(45,27,105,0.1); transition: transform 0.25s, box-shadow 0.25s; cursor: pointer; position: relative; text-decoration: none; color: #1A1A2E; display: block; }
+.product-card:hover { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(45,27,105,0.18); }
+.product-img { width: 100%; aspect-ratio: 1; background: #F0EEFB; display: flex; align-items: center; justify-content: center; font-size: 4rem; position: relative; }
+.badge-promo-2 { position: absolute; top: 10px; left: 10px; background: #E74C3C; color: #fff; border-radius: 6px; padding: 2px 8px; font-size: 0.75rem; font-weight: 700; }
+.badge-new-2   { position: absolute; top: 10px; left: 10px; background: #27AE60; color: #fff; border-radius: 6px; padding: 2px 8px; font-size: 0.75rem; font-weight: 700; }
+.product-info { padding: 1rem; }
+.product-info h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; }
+.product-info .cat-tag { color: #7070A0; font-size: 0.78rem; margin-bottom: 8px; }
+.product-info .short-desc { font-size: 0.82rem; color: #7070A0; margin-bottom: 10px; line-height: 1.4; }
+.product-footer { display: flex; justify-content: space-between; align-items: center; }
+.price { font-family: 'Sora', sans-serif; font-size: 1.05rem; font-weight: 700; color: #2D1B69; }
+.price-old { font-size: 0.8rem; color: #7070A0; text-decoration: line-through; margin-left: 4px; }
+.empty-msg { color: #7070A0; padding: 3rem; text-align: center; grid-column: 1/-1; }
+
+@media (max-width: 768px) {
+  .filter-dropdown-panel { width: 92vw; left: -8px; }
+}
+</style>
+</head>
+<body>
+
+<div class="site-bg-carousel" id="siteBgCarousel"></div>
+<div class="site-bg-overlay"></div>
+
+<nav class="site-nav">
+  <a class="nav-logo" href="../home/Accueil.html"><i class="fa-solid fa-bag-shopping brand-icon"></i> <span class="brand-my">My</span> <span class="brand-b">B</span> Assigamé</a>
+  <div class="nav-links">
+    <a href="../home/Accueil.html">Accueil</a>
+    <a href="../catalogue/Catalogue.html" class="active">Catalogue</a>
+    <a href="../vendeur/DashboardVendeur.html" id="navVendeurLink" style="display:none">Espace vendeur</a>
+    <a href="../livreur/DashboardLivreur.html" id="navLivreurLink" style="display:none">Mes livraisons</a>
+  </div>
+  <div class="nav-right">
+    <a class="cart-btn" href="../panier/Panier.html"><i class="fa-solid fa-cart-shopping"></i> <span class="cart-badge" id="cart-count">0</span></a>
+    <a class="btn-login-nav" id="navAuthBtn" href="../auth/Auth.html">Connexion</a>
+  </div>
+</nav>
+
+<div class="catalogue-header">
+  <div class="catalogue-header-inner">
+    <div class="search-filter-row">
+      <div class="search-big">
+        <input placeholder="Rechercher un produit..." id="searchInput" oninput="filterProducts()">
+        <button onclick="filterProducts()">Rechercher</button>
+      </div>
+      <div class="filter-dropdown-wrap">
+        <button class="filter-toggle-btn" onclick="toggleFilterPanel()">
+          <i class="fa-solid fa-sliders"></i> Filtres <span class="fcount" id="filterCount" style="display:none">0</span>
+        </button>
+        <div class="filter-dropdown-panel" id="filterPanel">
+          <div class="filter-group"><h4>Catégorie</h4><div id="catFilters"></div></div>
+          <div class="filter-group">
+            <h4>Prix maximum (FCFA)</h4>
+            <input type="range" id="priceRange" min="1000" max="200000" step="500" value="200000" oninput="onPriceRangeInput(this.value)" style="width:100%;accent-color:#2D1B69">
+            <div class="price-input-row">
+              <input type="number" id="priceInput" min="0" max="200000" step="500" value="200000" placeholder="Ex : 50000" oninput="onPriceInputTyped(this.value)">
+            </div>
+          </div>
+          <button class="filter-reset-btn" onclick="resetFilters()">Réinitialiser les filtres</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="catalogue-body">
+  <div class="sort-bar">
+    <select class="sort-select" onchange="filterProducts()" id="sortSelect">
+      <option value="default">Trier par défaut</option>
+      <option value="price-asc">Prix croissant</option>
+      <option value="price-desc">Prix décroissant</option>
+      <option value="name">Nom A-Z</option>
+    </select>
+  </div>
+  <div class="products-grid" id="catalogueGrid"><div class="empty-msg">Chargement des produits…</div></div>
+</div>
+
+<footer class="site-footer">
+  <div class="footer-grid">
+    <div class="footer-brand"><div class="logo"><i class="fa-solid fa-bag-shopping brand-icon"></i> <span class="brand-my">My</span> <span class="brand-b">B</span> Assigamé</div><p>Votre marché en ligne de confiance au Togo.</p></div>
+    <div class="footer-col"><h4>Navigation</h4>
+      <a href="../home/Accueil.html">Accueil</a><a href="../catalogue/Catalogue.html">Catalogue</a>
+      <a href="../panier/Panier.html">Mon panier</a><a href="../profil/Profil.html">Mon profil</a></div>
+    <div class="footer-col"><h4>Support</h4><a>FAQ</a><a>Livraison</a><a>Retours</a><a>Contact</a></div>
+    <div class="footer-col"><h4>Contact</h4><a><i class="fa-solid fa-phone"></i> +228 90 00 00 00</a><a><i class="fa-solid fa-envelope"></i> contact@assigame.tg</a><a><i class="fa-solid fa-location-dot"></i> Lomé, Togo</a></div>
+  </div>
+  <div class="footer-bottom">© 2026 Assigamé. Tous droits réservés.</div>
+</footer>
+
+<script src="../../services/api.js"></script>
+<script src="../../services/productService.js"></script>
+<script src="../../utils/toast.js"></script>
+<script src="../../utils/icons.js"></script>
+<script>
+
+let ALL_PRODUCTS = [];
+const MAX_PRICE = 200000;
+
+function updateAuthBtn() {
+  const user = getCurrentUser();
+  const btn = document.getElementById("navAuthBtn");
+  const vendeurLink = document.getElementById("navVendeurLink");
+  const livreurLink = document.getElementById("navLivreurLink");
+  if (user) {
+    btn.textContent = user.prenom || "Profil";
+    btn.href = user.role === "ADMIN" ? "../admin/Dashboard.html" : "../profil/Profil.html";
+    if (vendeurLink) vendeurLink.style.display = user.role === "VENDEUR" ? "" : "none";
+    if (livreurLink) livreurLink.style.display = user.role === "LIVREUR" ? "" : "none";
+  } else {
+    btn.href = "../auth/Auth.html?return=" + encodeURIComponent(window.location.href);
+  }
+}
+
+function productCard(p) {
+  try {
+    const prix = p.prix || 0;
+    const badge = (p.enPromotion && p.prixBarre) ? `<div class="badge-promo-2">-${Math.round((1-prix/p.prixBarre)*100)}%</div>` : p.estNouveau ? `<div class="badge-new-2">NOUVEAU</div>` : "";
+    const oldP  = p.prixBarre ? `<span class="price-old">${p.prixBarre.toLocaleString('fr-FR')}</span>` : "";
+    return `
+      <a class="product-card" href="../produit/Produit.html?id=${p.id}">
+        <div class="product-img">${productEmoji(p)}${badge}</div>
+        <div class="product-info">
+          <h3>${p.nom || "Produit"}</h3>
+          <div class="cat-tag">${p.categorie || ""}</div>
+          <div class="short-desc">${p.description||""}</div>
+          <div class="product-footer">
+            <div><span class="price">${prix.toLocaleString('fr-FR')} FCFA</span>${oldP}</div>
+            <button class="add-btn" onclick="event.preventDefault();event.stopPropagation();quickAdd(${p.id})">+ Panier</button>
+          </div>
+        </div>
+      </a>`;
+  } catch (e) {
+    console.warn("[productCard] carte ignorée :", e, p);
+    return "";
+  }
+}
+
+function quickAdd(productId) {
+  const p = ALL_PRODUCTS.find(x => x.id === productId);
+  if (!p) return;
+  addToCart(productId, 1);
+  showToast(`${p.nom} ajouté au panier ✓`, "success");
+}
+
+async function loadProducts() {
+  const { data, error } = await getAllProducts();
+  ALL_PRODUCTS = (!error && Array.isArray(data)) ? data : [];
+}
+
+function buildCatFilters() {
+  const cats = [...new Set(ALL_PRODUCTS.map(p => p.categorie))];
+  const params = new URLSearchParams(window.location.search);
+  const presetCat = params.get("cat");
+  document.getElementById("catFilters").innerHTML = cats.map(c => `
+    <div class="filter-option">
+      <input type="checkbox" id="cf-${c}" value="${c}" onchange="filterProducts()" ${presetCat===c ? "checked" : ""}>
+      <label for="cf-${c}">${c}</label>
+    </div>`).join("");
+}
+
+function filterProducts() {
+  const search = document.getElementById("searchInput").value.toLowerCase();
+  const sort = document.getElementById("sortSelect").value;
+  const maxPrice = parseInt(document.getElementById("priceRange").value);
+  const checkedCats = [...document.querySelectorAll("#catFilters input:checked")].map(i => i.value);
+
+  let filtered = ALL_PRODUCTS.filter(p => {
+    const matchSearch = p.nom.toLowerCase().includes(search) || p.categorie.toLowerCase().includes(search) || (p.description||"").toLowerCase().includes(search);
+    const matchCat = checkedCats.length === 0 || checkedCats.includes(p.categorie);
+    const matchPrice = p.prix <= maxPrice;
+    return matchSearch && matchCat && matchPrice;
+  });
+
+  if (sort === "price-asc")  filtered.sort((a,b) => a.prix - b.prix);
+  if (sort === "price-desc") filtered.sort((a,b) => b.prix - a.prix);
+  if (sort === "name")       filtered.sort((a,b) => a.nom.localeCompare(b.nom));
+
+  document.getElementById("catalogueGrid").innerHTML = filtered.length
+    ? filtered.map(productCard).join("")
+    : `<div class="empty-msg">${ALL_PRODUCTS.length ? "Aucun produit trouvé." : "Aucun produit pour le moment — les vendeurs publient bientôt."}</div>`;
+
+  const activeCount = checkedCats.length + (maxPrice < MAX_PRICE ? 1 : 0);
+  const fcount = document.getElementById("filterCount");
+  fcount.textContent = activeCount;
+  fcount.style.display = activeCount > 0 ? "" : "none";
+}
+
+/* ── Menu déroulant des filtres ── */
+function toggleFilterPanel() {
+  document.getElementById("filterPanel").classList.toggle("open");
+}
+document.addEventListener("click", (e) => {
+  const wrap = document.querySelector(".filter-dropdown-wrap");
+  if (wrap && !wrap.contains(e.target)) document.getElementById("filterPanel").classList.remove("open");
+});
+
+/* Curseur et champ numérique restent synchronisés dans les deux sens —
+   on peut glisser le curseur OU taper directement le montant. */
+function onPriceRangeInput(v) {
+  document.getElementById("priceInput").value = v;
+  filterProducts();
+}
+function onPriceInputTyped(v) {
+  let val = parseInt(v);
+  if (isNaN(val)) return;
+  val = Math.max(0, Math.min(val, MAX_PRICE));
+  document.getElementById("priceRange").value = val;
+  filterProducts();
+}
+function resetFilters() {
+  document.querySelectorAll("#catFilters input:checked").forEach(i => i.checked = false);
+  document.getElementById("priceRange").value = MAX_PRICE;
+  document.getElementById("priceInput").value = MAX_PRICE;
+  filterProducts();
+}
+
+/* Fond de toute la page : images du dossier back "commerce" (déposer un
+   fichier là-bas suffit à l'ajouter) COMBINÉES aux photos des produits
+   que l'admin a mis en avant — même logique que sur l'accueil. */
+async function renderSiteBackground() {
+  const host = document.getElementById("siteBgCarousel");
+  /* UNIQUEMENT les images du dossier back "commerce" — jamais les
+     produits mis en avant, qui restent réservés au carrousel héros.
+     Ajouter/retirer une photo dans ce dossier côté serveur suffit à la
+     faire apparaître ou disparaître ici, sans aucune autre modification. */
+  let urls = [];
+  try { const r = await fetch("/api/images/commerce"); urls = r.ok ? await r.json() : []; } catch (e) { /* le fond reste simplement vide */ }
+  if (!urls.length) return;
+  host.innerHTML = urls.map((u, i) => `<div class="site-bg-slide ${i===0?'active':''}" style="background-image:url('${u}')"></div>`).join("");
+  if (urls.length < 2) return;
+  const slides = host.querySelectorAll(".site-bg-slide");
+  let current = 0;
+  setInterval(() => {
+    slides[current].classList.remove("active");
+    current = (current + 1) % slides.length;
+    slides[current].classList.add("active");
+  }, 5000);
+}
+
+function safe(label, fn) {
+  try { fn(); } catch (e) { console.warn(`[Catalogue] "${label}" a échoué :`, e); }
+}
+
+window.addEventListener("DOMContentLoaded", async () => {
+  safe("updateCartBadge", updateCartBadge);
+  safe("updateAuthBtn", updateAuthBtn);
+  try { await loadProducts(); } catch (e) { console.warn("[Catalogue] loadProducts a échoué :", e); ALL_PRODUCTS = []; }
+  safe("renderSiteBackground", renderSiteBackground);
+  safe("buildCatFilters", buildCatFilters);
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("q")) document.getElementById("searchInput").value = params.get("q");
+  safe("filterProducts", filterProducts);
+});
+</script>
+</body>
+</html>

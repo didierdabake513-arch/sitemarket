@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assigamé – Dashboard Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../styles/base.css">
+<link rel="stylesheet" href="../../styles/components.css">
+<link rel="stylesheet" href="../../styles/buttons.css">
+<style>
+body { display: flex; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ SIDEBAR ═══════════════ -->
+<div class="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo"><i class="fa-solid fa-bag-shopping brand-icon"></i> <span class="brand-my">My</span> <span class="brand-b">B</span> Assigamé</div>
+    <p>Panneau d'administration</p>
+  </div>
+  <div class="sidebar-menu">
+    <div class="menu-label">Principal</div>
+    <a class="menu-item active" id="mi-dashboard" onclick="goSection('dashboard')"><span class="mi-icon"><i class="fa-solid fa-chart-line"></i></span> Tableau de bord</a>
+
+    <div class="menu-label">Gestion</div>
+    <a class="menu-item" id="mi-products" onclick="goSection('products')"><span class="mi-icon"><i class="fa-solid fa-box"></i></span> Produits</a>
+    <a class="menu-item" id="mi-orders" onclick="goSection('orders')"><span class="mi-icon"><i class="fa-solid fa-clipboard-list"></i></span> Commandes <span class="badge-count" id="pending-badge">0</span></a>
+    <a class="menu-item" id="mi-users" onclick="goSection('users')"><span class="mi-icon"><i class="fa-solid fa-users"></i></span> Utilisateurs</a>
+    <a class="menu-item" id="mi-invitations" onclick="goSection('invitations')"><span class="mi-icon"><i class="fa-solid fa-envelope"></i></span> Invitations admin</a>
+    <a class="menu-item" id="mi-settings" onclick="goSection('settings')"><span class="mi-icon"><i class="fa-solid fa-gear"></i></span> Paramètres du site</a>
+    <a class="menu-item" id="mi-encheres" onclick="goSection('encheres')"><span class="mi-icon"><i class="fa-solid fa-gavel"></i></span> Enchères <span class="badge" style="background:#FFF3CD;color:#8a5500;font-size:0.65rem;margin-left:4px">TEST</span></a>
+    <a class="menu-item" href="../messagerie/Messagerie.html"><span class="mi-icon"><i class="fa-solid fa-comment-dots"></i></span> Messages</a>
+
+    <div class="menu-label">Autre</div>
+    <a class="menu-item" href="../home/Accueil.html"><span class="mi-icon"><i class="fa-solid fa-globe"></i></span> Voir le site</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="admin-chip">
+      <div class="admin-chip-avatar" id="adminInitial" onclick="goProfil()" title="Mon profil">A</div>
+      <div onclick="goProfil()" style="cursor:pointer;flex:1" title="Mon profil">
+        <div class="admin-chip-name" id="adminName">Admin</div>
+        <div class="admin-chip-role">Administrateur</div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()" title="Déconnexion">⎋</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MAIN ═══════════════ -->
+<div class="admin-main-wrap">
+  <div class="admin-topbar">
+    <div class="admin-topbar-title" id="topbar-title">Tableau de bord</div>
+    <div class="topbar-right">
+      <div class="topbar-search-wrap">
+        <i class="fa-solid fa-magnifying-glass search-ico"></i>
+        <input class="topbar-search" placeholder="Rechercher…" oninput="globalSearch(this.value)">
+      </div>
+      <button class="btn-notif" onclick="showComingSoon(event)"><i class="fa-solid fa-bell"></i><span class="notif-dot"></span></button>
+    </div>
+  </div>
+
+  <div class="admin-content">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div class="admin-section active" id="sec-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card"><span class="stat-icon"><i class="fa-solid fa-box"></i></span><div class="stat-label">Produits</div>
+          <div class="stat-value" id="s-products"><div class="skeleton skeleton-val"></div></div>
+          <div class="stat-change" id="s-products-sub"><div class="skeleton skeleton-sub"></div></div></div>
+        <div class="stat-card gold"><span class="stat-icon"><i class="fa-solid fa-coins"></i></span><div class="stat-label">Revenus (FCFA)</div>
+          <div class="stat-value" id="s-revenue"><div class="skeleton skeleton-val"></div></div>
+          <div class="stat-change up" id="s-revenue-sub"><div class="skeleton skeleton-sub"></div></div></div>
+        <div class="stat-card green"><span class="stat-icon"><i class="fa-solid fa-clipboard-list"></i></span><div class="stat-label">Commandes</div>
+          <div class="stat-value" id="s-orders"><div class="skeleton skeleton-val"></div></div>
+          <div class="stat-change" id="s-orders-sub"><div class="skeleton skeleton-sub"></div></div></div>
+        <div class="stat-card red"><span class="stat-icon"><i class="fa-solid fa-users"></i></span><div class="stat-label">Utilisateurs</div>
+          <div class="stat-value" id="s-users"><div class="skeleton skeleton-val"></div></div>
+          <div class="stat-change up" id="s-users-sub"><div class="skeleton skeleton-sub"></div></div></div>
+      </div>
+
+      <!-- ── Alertes de supervision : ce qui mérite l'attention de l'admin ── -->
+      <div class="table-card" id="alertsCard" style="margin-bottom:1.5rem">
+        <div class="table-header"><h3><i class="fa-solid fa-triangle-exclamation" style="color:#F39C12"></i> À surveiller</h3></div>
+        <div id="alertsBody" style="padding:0.5rem 1.25rem 1.25rem;display:flex;flex-direction:column;gap:8px;color:#7070A0;font-size:0.85rem">
+          <div class="skeleton" style="height:14px;border-radius:4px"></div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-card-title"><span>Revenus des 6 derniers mois (FCFA)</span>
+            <select class="chart-year-select" id="yearSelect" onchange="reloadBarChart(this.value)">
+              <option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option>
+            </select>
+          </div>
+          <div id="bar-chart"><div class="skeleton" style="height:160px;border-radius:8px"></div></div>
+        </div>
+        <div class="chart-card"><div class="chart-card-title">Ventes par catégorie</div>
+          <div id="donut-chart"><div class="skeleton" style="height:160px;border-radius:8px"></div></div></div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header"><h3>Commandes récentes</h3><button class="btn-primary" onclick="goSection('orders')">Voir tout →</button></div>
+        <table><thead><tr><th>Référence</th><th>Client</th><th>Vendeur</th><th>Articles</th><th>Total</th><th>Statut</th><th>Date</th></tr></thead>
+          <tbody id="recent-orders-body"><tr><td colspan="7"><div class="skeleton" style="height:14px;border-radius:4px"></div></td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- ══ PRODUITS ══ -->
+    <div class="admin-section" id="sec-products">
+      <div class="section-top">
+        <h2>Gestion des produits</h2>
+        <div style="display:flex;gap:0.75rem;align-items:center">
+          <div class="topbar-search-wrap">
+            <i class="fa-solid fa-magnifying-glass search-ico"></i>
+            <input class="topbar-search" placeholder="Filtrer…" oninput="filterTable('products-body', this.value)">
+          </div>
+        </div>
+      </div>
+      <p class="text-sm text-muted" style="margin-bottom:1rem">
+        L'ajout de produits est réservé aux vendeurs. En tant qu'administrateur,
+        vous pouvez modifier ou retirer un produit déjà publié (modération de la plateforme).
+      </p>
+      <div class="table-card">
+        <table><thead><tr><th>Produit</th><th>Vendeur</th><th>Catégorie</th><th>Prix</th><th>Stock</th><th>Actions</th></tr></thead>
+          <tbody id="products-body"><tr><td colspan="6" style="text-align:center;padding:2rem;color:#7070A0">Chargement…</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- ══ COMMANDES ══ -->
+    <div class="admin-section" id="sec-orders">
+      <div class="section-top"><h2>Gestion des commandes</h2>
+        <div class="topbar-search-wrap">
+          <i class="fa-solid fa-magnifying-glass search-ico"></i>
+          <input class="topbar-search" placeholder="Filtrer…" oninput="filterTable('orders-body', this.value)">
+        </div></div>
+      <div class="table-card">
+        <table><thead><tr><th>Référence</th><th>Client</th><th>Vendeur</th><th>Articles</th><th>Total</th><th>Statut</th><th>Changer statut</th><th>Date</th></tr></thead>
+          <tbody id="orders-body"><tr><td colspan="8" style="text-align:center;padding:2rem;color:#7070A0">Chargement…</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- ══ UTILISATEURS ══ -->
+    <div class="admin-section" id="sec-users">
+      <div class="section-top"><h2>Gestion des utilisateurs</h2>
+        <div class="topbar-search-wrap">
+          <i class="fa-solid fa-magnifying-glass search-ico"></i>
+          <input class="topbar-search" placeholder="Filtrer…" oninput="filterTable('users-body', this.value)">
+        </div></div>
+      <div class="table-card">
+        <table><thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Région</th><th>Commandes</th><th>Solde (test enchères)</th><th>Statut</th><th>Actions</th></tr></thead>
+          <tbody id="users-body"><tr><td colspan="7" style="text-align:center;padding:2rem;color:#7070A0">Chargement…</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- ══ INVITATIONS ADMIN ══
+         ⚙️ Aucun formulaire d'inscription admin n'existe nulle part dans le site.
+         Le SEUL moyen de devenir admin est de recevoir une invitation par email
+         envoyée par un admin existant depuis cet écran. Le calcul de l'élévation
+         de rôle (CLIENT/VENDEUR → ADMIN) doit être fait à 100% côté Spring Boot
+         lors du clic sur le lien reçu par email — jamais côté front. -->
+    <div class="admin-section" id="sec-invitations">
+      <div class="section-top"><h2>Invitations administrateur</h2></div>
+      <div class="card" style="max-width:500px">
+        <div class="card-title">Inviter un nouvel administrateur</div>
+        <p class="text-sm text-muted" style="margin-bottom:1rem">
+          Un email contenant un lien d'activation à usage unique sera envoyé.
+          La personne devient administrateur uniquement après avoir cliqué sur ce lien.
+        </p>
+        <div class="form-group"><label>Adresse email</label>
+          <input class="form-control no-icon" type="email" id="invite-email" placeholder="futur-admin@example.com"></div>
+        <button class="btn-primary" onclick="sendInvitation(event)"><i class="fa-solid fa-envelope"></i> Envoyer l'invitation</button>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><h3>Invitations envoyées</h3></div>
+        <table><thead><tr><th>Email</th><th>Statut</th><th>Date d'envoi</th></tr></thead>
+          <tbody id="invitations-body"><tr><td colspan="3" style="text-align:center;padding:2rem;color:#7070A0">Aucune invitation envoyée</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <div class="admin-section" id="sec-settings">
+      <div class="section-top"><h2>Paramètres du site</h2></div>
+      <div class="card" style="max-width:560px">
+        <div class="card-title">Bannière promotionnelle de l'accueil</div>
+        <p class="text-sm text-muted" style="margin-bottom:1rem">
+          C'est le bandeau orange affiché sur l'accueil, sous la liste des produits populaires.
+        </p>
+        <div class="form-group"><label>Titre</label>
+          <input class="form-control no-icon" id="pb-titre" placeholder="Jusqu'à -40% ce weekend !"></div>
+        <div class="form-group"><label>Sous-titre</label>
+          <input class="form-control no-icon" id="pb-soustitre" placeholder="Offres limitées sur les chaussures et l'électronique"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Texte du bouton</label>
+            <input class="form-control no-icon" id="pb-bouton-texte" placeholder="Profiter des offres"></div>
+          <div class="form-group"><label>Lien du bouton</label>
+            <input class="form-control no-icon" id="pb-bouton-lien" placeholder="../catalogue/Catalogue.html"></div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:1rem">
+          <input type="checkbox" id="pb-actif" style="accent-color:#2D1B69;width:16px;height:16px"> Afficher la bannière sur l'accueil
+        </label>
+        <button class="btn-primary" id="pb-save-btn" onclick="savePromoBanner()">Enregistrer</button>
+      </div>
+
+      <div class="card" style="max-width:560px;margin-top:1.5rem">
+        <div class="card-title">Produits mis en avant (carrousel de l'accueil)</div>
+        <p class="text-sm text-muted" style="margin-bottom:1rem">
+          Ce texte s'affiche en surimpression sur le grand panneau photo de l'accueil,
+          par-dessus les produits que vous avez mis en avant (★ dans l'onglet Produits).
+        </p>
+        <div class="form-group"><label>Titre</label>
+          <input class="form-control no-icon" id="pb-mea-titre" placeholder="Notre sélection du moment"></div>
+        <div class="form-group"><label>Texte</label>
+          <input class="form-control no-icon" id="pb-mea-texte" placeholder="Les meilleures trouvailles de nos vendeurs, choisies pour vous"></div>
+        <button class="btn-primary" id="pb-mea-save-btn" onclick="savePromoBanner()">Enregistrer</button>
+      </div>
+    </div>
+
+    <!-- ══ ENCHÈRES (fonctionnalité en test, réservée à l'admin) ══ -->
+    <div class="admin-section" id="sec-encheres">
+      <div class="section-top">
+        <h2>Enchères <span class="badge" style="background:#FFF3CD;color:#8a5500">Fonctionnalité en test</span></h2>
+      </div>
+      <p class="text-sm text-muted" style="margin-bottom:1.25rem">
+        Cette fonctionnalité n'est pour l'instant accessible qu'à vous — elle est masquée pour les
+        clients, vendeurs et livreurs le temps d'être testée. La vérification "peut payer" est une
+        simulation basée sur le solde réglable dans l'onglet Utilisateurs — aucun argent réel n'est débité.
+      </p>
+
+      <div class="card" style="max-width:640px;margin-bottom:1.5rem">
+        <div class="card-title">Créer une enchère</div>
+        <div class="form-row">
+          <div class="form-group"><label>Produit</label>
+            <select class="form-control no-icon" id="en-produit"></select></div>
+          <div class="form-group"><label>Prix de départ (FCFA)</label>
+            <input class="form-control no-icon" type="number" id="en-prix-depart" placeholder="Inférieur au prix normal"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Début</label><input class="form-control no-icon" type="datetime-local" id="en-debut"></div>
+          <div class="form-group"><label>Fin</label><input class="form-control no-icon" type="datetime-local" id="en-fin"></div>
+        </div>
+        <button class="btn-primary" id="en-save-btn" onclick="creerEnchereAdmin()">Créer l'enchère</button>
+      </div>
+
+      <div class="table-card">
+        <table>
+          <thead><tr><th>Produit</th><th>Prix normal</th><th>Départ</th><th>Actuel</th><th>Meilleure offre</th><th>Statut</th><th>Période</th><th>Tester / Actions</th></tr></thead>
+          <tbody id="encheres-body"><tr><td colspan="8" style="text-align:center;padding:2rem;color:#7070A0">Chargement…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL PRODUIT — admin : modification uniquement (pas de création) -->
+<div class="modal-overlay" id="view-product-modal" onclick="if(event.target===this) closeViewModal()">
+  <div class="modal-box">
+    <div class="modal-title">Détails du produit</div>
+    <div id="view-product-body"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" style="flex:1" onclick="closeViewModal()">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="../../services/api.js"></script>
+<script src="../../services/authService.js"></script>
+<script src="../../services/productService.js"></script>
+<script src="../../services/orderService.js"></script>
+<script src="../../services/userService.js"></script>
+<script src="../../services/statsService.js"></script>
+<script src="../../utils/charts.js"></script>
+<script src="../../utils/toast.js"></script>
+<script src="../../utils/featureGate.js"></script>
+<script>
+let STATE = { products: [], orders: [], users: [], invitations: [] };
+const usingDemoData = false;
+
+window.addEventListener("DOMContentLoaded", async () => {
+  const user = getCurrentUser();
+  if (!user) { window.location.href = "../auth/Auth.html"; return; }
+  if (user.role !== "ADMIN") { showToast("Accès réservé aux administrateurs", "error"); setTimeout(() => window.location.href = "../profil/Profil.html", 1500); return; }
+  initAdminInfo(user);
+  try {
+    await loadAll();
+    await renderDashboard();
+  } catch (e) {
+    console.error("[Dashboard] échec du chargement initial :", e);
+    showToast("Certaines données n'ont pas pu être chargées — rechargez la page", "error");
+  }
+});
+
+function initAdminInfo(user) {
+  const name = `${user.prenom||""} ${user.nom||""}`.trim() || "Admin";
+  document.getElementById("adminName").textContent = name;
+  document.getElementById("adminInitial").textContent = name[0].toUpperCase();
+}
+
+async function loadAll() {
+  const [pRes, oRes, uRes] = await Promise.all([ getAllProductsForAdmin(), getAllOrders(), getAllUsers() ]);
+  if (pRes.error === "NETWORK_ERROR" && oRes.error === "NETWORK_ERROR") {
+    showToast("Serveur indisponible — impossible de charger le dashboard", "error");
+    STATE.products = []; STATE.orders = []; STATE.users = [];
+  } else {
+    STATE.products = pRes.data || []; STATE.orders = oRes.data || []; STATE.users = uRes.data || [];
+  }
+}
+
+/* Isole chaque widget : si l'un échoue (donnée inattendue, graphique,
+   etc.), les autres s'affichent quand même au lieu de laisser tout le
+   tableau de bord bloqué sur ses squelettes de chargement. */
+function safe(label, fn) {
+  try { fn(); } catch (e) { console.warn(`[Dashboard] "${label}" a échoué :`, e); }
+}
+
+async function renderDashboard() {
+  const summary = await getSummary(STATE);
+  const pending = STATE.orders.filter(o => o.statut === "EN_ATTENTE").length;
+  safe("stat-cards", () => {
+    setStatCard("s-products", summary.products, summary.products > 0 ? `${summary.products} référence(s) active(s)` : "Aucun produit");
+    setStatCard("s-revenue", summary.revenue >= 1000 ? `${(summary.revenue/1000).toFixed(0)}k` : summary.revenue, summary.revenue > 0 ? "↑ Total des ventes" : "Aucune vente");
+    setStatCard("s-orders", summary.orders, pending > 0 ? `${pending} en attente` : "Toutes traitées");
+    setStatCard("s-users", summary.users, summary.users > 0 ? `${summary.users} inscrit(s)` : "Aucun utilisateur");
+    document.getElementById("pending-badge").textContent = pending;
+  });
+
+  const year = parseInt(document.getElementById("yearSelect").value) || 2025;
+  try {
+    const monthly = await getRevenueMonthly(STATE.orders, year);
+    drawBarChart("bar-chart", monthly.slice(-6));
+  } catch (e) { console.warn('[Dashboard] "bar-chart" a échoué :', e); }
+
+  try {
+    const catData = await getSalesByCategory(STATE.orders, STATE.products);
+    drawDonutChart("donut-chart", catData);
+  } catch (e) { console.warn('[Dashboard] "donut-chart" a échoué :', e); }
+
+  safe("recent-orders", () => renderRecentOrders(STATE.orders.slice(-5).reverse()));
+  safe("alerts", () => renderAlerts(pending));
+}
+
+/* ── Alertes de supervision : stocks bas, commandes en attente,
+   comptes bloqués — pour que l'admin voie d'un coup d'œil ce qui
+   mérite son attention, sans avoir à fouiller chaque onglet. */
+function renderAlerts(pendingCount) {
+  const box = document.getElementById("alertsBody");
+  const activeProducts = STATE.products.filter(p => p.statut !== "SUPPRIME");
+  const lowStock = activeProducts.filter(p => p.stock <= 5);
+  const blockedUsers = STATE.users.filter(u => u.bloque).length;
+  const alerts = [];
+  if (pendingCount > 0) alerts.push({ icon: "fa-clock", color: "#F39C12", text: `${pendingCount} commande(s) en attente de traitement`, section: "orders" });
+  if (lowStock.length > 0) alerts.push({ icon: "fa-box-open", color: "#E74C3C", text: `${lowStock.length} produit(s) en stock critique (≤ 5 unités) : ${lowStock.slice(0,3).map(p=>p.nom).join(", ")}${lowStock.length>3?"…":""}`, section: "products" });
+  if (blockedUsers > 0) alerts.push({ icon: "fa-user-lock", color: "#7070A0", text: `${blockedUsers} compte(s) bloqué(s)`, section: "users" });
+  if (!alerts.length) { box.innerHTML = `<div style="color:#27AE60"><i class="fa-solid fa-circle-check"></i> Rien à signaler — tout est sous contrôle.</div>`; return; }
+  box.innerHTML = alerts.map((a, i) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:8px 0;${i<alerts.length-1?'border-bottom:1px solid #F0EEFB':''}">
+      <span><i class="fa-solid ${a.icon}" style="color:${a.color};width:18px"></i> ${a.text}</span>
+      <button class="btn-icon view" onclick="goSection('${a.section}')">Voir →</button>
+    </div>`).join("");
+}
+function setStatCard(valueId, value, subText) {
+  const valEl = document.getElementById(valueId), subEl = document.getElementById(`${valueId}-sub`);
+  if (valEl) valEl.textContent = typeof value === "number" ? value.toLocaleString('fr-FR') : value;
+  if (subEl) subEl.textContent = subText || "";
+}
+async function reloadBarChart(year) {
+  document.getElementById("bar-chart").innerHTML = `<div class="skeleton" style="height:160px;border-radius:8px"></div>`;
+  const monthly = await getRevenueMonthly(STATE.orders, parseInt(year));
+  drawBarChart("bar-chart", monthly.slice(-6));
+}
+function renderRecentOrders(orders) {
+  const cls = s => ({"LIVREE":"badge-delivered","EXPEDIEE":"badge-shipping","EN_ATTENTE":"badge-pending","ANNULEE":"badge-cancelled"}[s] || "badge-pending");
+  const lbl = s => ({"LIVREE":"Livrée","EXPEDIEE":"Expédiée","EN_ATTENTE":"En attente","ANNULEE":"Annulée"}[s] || s);
+  const tbody = document.getElementById("recent-orders-body");
+  if (!orders.length) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2rem;color:#7070A0">Aucune commande pour le moment</td></tr>`; return; }
+  tbody.innerHTML = orders.map(o => {
+    const date = new Date(o.dateCommande || Date.now()).toLocaleDateString("fr-FR");
+    return `<tr><td><strong>${o.reference||o.id}</strong></td><td>${o.clientNom||"—"}</td>
+      <td style="color:#7070A0;font-size:0.82rem">${o.vendeursNoms || "—"}</td>
+      <td style="color:#7070A0;font-size:0.82rem">${o.nbArticles||"?"} article(s)</td>
+      <td><strong>${(o.montantTotal||0).toLocaleString('fr-FR')} FCFA</strong></td>
+      <td><span class="badge ${cls(o.statut)}">${lbl(o.statut)}</span></td>
+      <td style="color:#7070A0;font-size:0.82rem">${date}</td></tr>`;
+  }).join("");
+}
+
+async function renderProducts() {
+  const tbody = document.getElementById("products-body");
+  if (!STATE.products.length) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;color:#7070A0">Aucun produit</td></tr>`; return; }
+  tbody.innerHTML = STATE.products.map(p => {
+    const deleted = p.statut === "SUPPRIME";
+    const stockClass = p.stock <= 5 ? "stock-low" : p.stock <= 15 ? "stock-mid" : "stock-ok";
+    const rowStyle = deleted ? "opacity:0.45" : "";
+    const actions = deleted
+      ? `<button class="btn-icon view" onclick="restoreProductItem(${p.id})"><i class="fa-solid fa-rotate-left"></i> Restaurer</button>`
+      : `<button class="btn-icon view" onclick="viewProductDetails(${p.id})"><i class="fa-solid fa-eye"></i> Voir</button>
+         <button class="btn-icon star ${p.misEnAvant?'active':''}" onclick="toggleFeatured(${p.id}, ${!p.misEnAvant})" title="Mettre en avant sur l'accueil"><i class="fa-solid fa-star"></i> ${p.misEnAvant ? "En avant" : "Mettre en avant"}</button>
+         <button class="btn-icon del" onclick="deleteProductItem(${p.id})"><i class="fa-solid fa-trash"></i> Suppr.</button>`;
+    return `<tr style="${rowStyle}">
+      <td><div class="prod-cell"><div class="prod-emoji">${p.emoji || "📦"}</div><div><div class="prod-name">${p.nom}${deleted ? ' <span style="color:#E74C3C;font-size:0.75rem;font-weight:700">· SUPPRIMÉ</span>' : ''}</div><div class="prod-meta">${p.description||""}</div></div></div></td>
+      <td>${p.vendeurNom || "—"}</td><td>${p.categorie}</td>
+      <td><strong>${(p.prix||0).toLocaleString('fr-FR')} FCFA</strong></td>
+      <td class="${stockClass}">${p.stock} unités</td>
+      <td>${actions}</td>
+    </tr>`;
+  }).join("");
+}
+
+async function renderOrders() {
+  const tbody = document.getElementById("orders-body");
+  if (!STATE.orders.length) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:2rem;color:#7070A0">Aucune commande</td></tr>`; return; }
+  tbody.innerHTML = STATE.orders.map((o, idx) => {
+    const date = new Date(o.dateCommande || Date.now()).toLocaleDateString("fr-FR");
+    const cls = ({"LIVREE":"badge-delivered","EXPEDIEE":"badge-shipping","EN_ATTENTE":"badge-pending","ANNULEE":"badge-cancelled"}[o.statut] || "badge-pending");
+    return `<tr><td><strong>${o.reference||o.id}</strong></td><td>${o.clientNom||"—"}</td>
+      <td style="color:#7070A0;font-size:0.82rem">${o.vendeursNoms || "—"}</td>
+      <td style="color:#7070A0;font-size:0.82rem">${o.nbArticles||"?"} article(s)</td>
+      <td><strong>${(o.montantTotal||0).toLocaleString('fr-FR')} FCFA</strong></td>
+      <td><span class="badge ${cls}">${({"LIVREE":"Livrée","EXPEDIEE":"Expédiée","EN_ATTENTE":"En attente","ANNULEE":"Annulée"}[o.statut]||o.statut)}</span></td>
+      <td><select class="status-select" onchange="changeStatus('${o.id}', this.value, ${idx})">
+            <option value="EN_ATTENTE" ${o.statut==="EN_ATTENTE"?"selected":""}>En attente</option>
+            <option value="EXPEDIEE"   ${o.statut==="EXPEDIEE"  ?"selected":""}>Expédiée</option>
+            <option value="LIVREE"     ${o.statut==="LIVREE"    ?"selected":""}>Livrée</option>
+            <option value="ANNULEE"    ${o.statut==="ANNULEE"   ?"selected":""}>Annulée</option>
+          </select></td>
+      <td style="color:#7070A0;font-size:0.82rem">${date}</td></tr>`;
+  }).join("");
+}
+async function changeStatus(orderId, newStatut, localIdx) {
+  if (newStatut === "LIVREE") {
+    renderOrders();
+    return showComingSoon();
+  }
+  if (!usingDemoData) {
+    const { error } = await updateOrderStatus(orderId, newStatut);
+    if (error && error !== "NETWORK_ERROR") { showToast(error, "error"); return; }
+  }
+  STATE.orders[localIdx].statut = newStatut;
+  document.getElementById("pending-badge").textContent = STATE.orders.filter(o => o.statut === "EN_ATTENTE").length;
+  showToast("Statut mis à jour ✓", "success");
+  renderOrders();
+}
+
+async function renderUsers() {
+  const tbody = document.getElementById("users-body");
+  if (!STATE.users.length) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:2rem;color:#7070A0">Aucun utilisateur</td></tr>`; return; }
+  const roleBadge = r => r === "ADMIN" ? "badge-admin" : r === "VENDEUR" ? "badge-vendeur" : r === "LIVREUR" ? "badge-livreur" : "badge-client";
+  tbody.innerHTML = STATE.users.map(u => {
+    const statusCls = u.bloque ? "badge-blocked" : "badge-active";
+    const nbOrders = STATE.orders.filter(o => o.clientId === u.id || o.clientEmail === u.email).length;
+    return `<tr><td><strong>${u.prenom||""} ${u.nom||""}</strong></td><td style="color:#7070A0;font-size:0.85rem">${u.email}</td>
+      <td><span class="badge ${roleBadge(u.role)}">${u.role}</span></td><td style="color:#7070A0;font-size:0.85rem">${u.region||"—"}</td><td>${nbOrders}</td>
+      <td><div style="display:flex;align-items:center;gap:4px">
+            <input type="number" class="form-control no-icon" style="width:90px;padding:5px 8px;font-size:0.8rem" id="solde-${u.id}" value="${u.solde||0}">
+            <button class="btn-icon view" onclick="doSetSolde(${u.id})">OK</button>
+          </div></td>
+      <td><span class="badge ${statusCls}">${u.bloque?"Bloqué":"Actif"}</span></td>
+      <td><button class="btn-icon block" onclick="doToggleBlock(${u.id}, ${!u.bloque})">${u.bloque ? "Débloquer" : "Bloquer"}</button>
+        ${u.role!=="ADMIN" ? `<button class="btn-icon del" onclick="doDeleteUser(${u.id})"><i class="fa-solid fa-trash"></i> Suppr.</button>` : ""}
+      </td></tr>`;
+  }).join("");
+}
+async function doSetSolde(userId) {
+  const input = document.getElementById(`solde-${userId}`);
+  const solde = parseFloat(input.value) || 0;
+  if (!usingDemoData) {
+    const { error } = await PUT(`/utilisateurs/${userId}/solde`, { solde });
+    if (error) { showToast(error, "error"); return; }
+  }
+  const u = STATE.users.find(x => x.id === userId); if (u) u.solde = solde;
+  showToast("Solde mis à jour (simulation)", "success");
+}
+async function doToggleBlock(userId, bloquer) {
+  if (!usingDemoData) { const { error } = await toggleBlockUser(userId, bloquer); if (error && error !== "NETWORK_ERROR") { showToast(error, "error"); return; } }
+  const u = STATE.users.find(x => x.id === userId); if (u) u.bloque = bloquer;
+  showToast(bloquer ? "Utilisateur bloqué" : "Utilisateur débloqué", bloquer ? "warning" : "success");
+  renderUsers();
+}
+async function doDeleteUser(userId) {
+  if (!confirm("Supprimer cet utilisateur définitivement ?")) return;
+  if (!usingDemoData) { const { error } = await deleteUser(userId); if (error && error !== "NETWORK_ERROR") { showToast(error, "error"); return; } }
+  STATE.users = STATE.users.filter(x => x.id !== userId);
+  showToast("Utilisateur supprimé", "error");
+  renderUsers();
+}
+
+/* ── INVITATIONS ADMIN ──
+   ⚙️ POST /api/admin/invitations { email } doit être créé côté Spring Boot.
+   Logique attendue : générer un token unique, l'enregistrer en base avec une
+   expiration, envoyer un email contenant un lien du type
+   https://votresite/activation-admin?token=XXX, et exposer un endpoint qui,
+   quand on visite ce lien connecté, élève le rôle de l'utilisateur à ADMIN. */
+function renderInvitations() {
+  const tbody = document.getElementById("invitations-body");
+  if (!STATE.invitations.length) { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:2rem;color:#7070A0">Aucune invitation envoyée</td></tr>`; return; }
+  tbody.innerHTML = STATE.invitations.map(inv => `
+    <tr><td>${inv.email}</td><td><span class="badge badge-pending">En attente</span></td><td style="color:#7070A0;font-size:0.82rem">${inv.date}</td></tr>`).join("");
+}
+async function sendInvitation(event) {
+  return showComingSoon(event);
+}
+
+/* ── PARAMÈTRES DU SITE : bannière promo de l'accueil ── */
+let PROMO_BANNER_LOADED = false;
+async function renderSettings() {
+  if (PROMO_BANNER_LOADED) return; // pas la peine de recharger à chaque clic sur l'onglet
+  try {
+    const res = await fetch("/api/promo-banner");
+    if (!res.ok) return;
+    const b = await res.json();
+    document.getElementById("pb-titre").value = b.titre || "";
+    document.getElementById("pb-soustitre").value = b.sousTitre || "";
+    document.getElementById("pb-bouton-texte").value = b.texteBouton || "";
+    document.getElementById("pb-bouton-lien").value = b.lienBouton || "";
+    document.getElementById("pb-actif").checked = !!b.actif;
+    document.getElementById("pb-mea-titre").value = b.misEnAvantTitre || "";
+    document.getElementById("pb-mea-texte").value = b.misEnAvantTexte || "";
+    PROMO_BANNER_LOADED = true;
+  } catch (e) { /* laisse le formulaire vide, l'admin peut quand même enregistrer */ }
+}
+async function savePromoBanner() {
+  const payload = {
+    titre: document.getElementById("pb-titre").value.trim(),
+    sousTitre: document.getElementById("pb-soustitre").value.trim(),
+    texteBouton: document.getElementById("pb-bouton-texte").value.trim(),
+    lienBouton: document.getElementById("pb-bouton-lien").value.trim(),
+    actif: document.getElementById("pb-actif").checked,
+    misEnAvantTitre: document.getElementById("pb-mea-titre").value.trim(),
+    misEnAvantTexte: document.getElementById("pb-mea-texte").value.trim(),
+  };
+  const btns = [document.getElementById("pb-save-btn"), document.getElementById("pb-mea-save-btn")];
+  btns.forEach(b => { b.disabled = true; b.innerHTML = `<span class="spinner"></span>Enregistrement…`; });
+  const { error } = await PUT("/promo-banner", payload);
+  btns.forEach(b => { b.disabled = false; });
+  document.getElementById("pb-save-btn").textContent = "Enregistrer";
+  document.getElementById("pb-mea-save-btn").textContent = "Enregistrer";
+  if (error) { showToast(error, "error"); return; }
+  showToast("Paramètres mis à jour ✓", "success");
+}
+
+/* ── ENCHÈRES (test admin) ── */
+let ENCHERES_PRODUIT_LOADED = false;
+async function renderEncheres() {
+  if (!ENCHERES_PRODUIT_LOADED) {
+    const sel = document.getElementById("en-produit");
+    sel.innerHTML = STATE.products.filter(p => p.statut !== "SUPPRIME")
+      .map(p => `<option value="${p.id}" data-prix="${p.prix}">${p.nom} (${p.prix.toLocaleString('fr-FR')} FCFA)</option>`).join("");
+    ENCHERES_PRODUIT_LOADED = true;
+  }
+  const { data, error } = await GET("/encheres");
+  const tbody = document.getElementById("encheres-body");
+  if (error) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:2rem;color:#7070A0">${error}</td></tr>`; return; }
+  if (!data.length) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:2rem;color:#7070A0">Aucune enchère créée</td></tr>`; return; }
+  const statutBadge = { A_VENIR: "badge-pending", EN_COURS: "badge-shipping", TERMINEE: "badge-delivered" };
+  const statutLbl = { A_VENIR: "À venir", EN_COURS: "En cours", TERMINEE: "Terminée" };
+  const fmt = d => new Date(d).toLocaleString('fr-FR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  tbody.innerHTML = data.map(e => `
+    <tr>
+      <td><strong>${e.produitNom}</strong></td>
+      <td>${e.prixNormal.toLocaleString('fr-FR')} FCFA</td>
+      <td>${e.prixDepart.toLocaleString('fr-FR')} FCFA</td>
+      <td><strong>${e.prixActuel.toLocaleString('fr-FR')} FCFA</strong></td>
+      <td style="font-size:0.82rem">${e.meilleurEncherisseurNom || "—"} ${e.nbOffres ? `(${e.nbOffres} offre${e.nbOffres>1?'s':''})` : ""}</td>
+      <td><span class="badge ${statutBadge[e.statut]}">${statutLbl[e.statut]}</span></td>
+      <td style="font-size:0.78rem;color:#7070A0">${fmt(e.dateDebut)}<br>→ ${fmt(e.dateFin)}</td>
+      <td>
+        ${e.statut === "EN_COURS" ? `<button class="btn-icon view" onclick="testerEnchere(${e.id}, ${e.prixActuel})">Tester une offre</button>` : ""}
+        <button class="btn-icon del" onclick="doSupprimerEnchere(${e.id})"><i class="fa-solid fa-trash"></i></button>
+      </td>
+    </tr>`).join("");
+}
+async function creerEnchereAdmin() {
+  const sel = document.getElementById("en-produit");
+  const produitId = sel.value;
+  const prixNormal = parseFloat(sel.selectedOptions[0]?.dataset.prix || 0);
+  const prixDepart = parseFloat(document.getElementById("en-prix-depart").value);
+  const debut = document.getElementById("en-debut").value;
+  const fin = document.getElementById("en-fin").value;
+  if (!produitId || !prixDepart || !debut || !fin) { showToast("Tous les champs sont obligatoires", "error"); return; }
+  if (prixDepart >= prixNormal) { showToast("Le prix de départ doit être inférieur au prix normal", "error"); return; }
+  const btn = document.getElementById("en-save-btn");
+  btn.disabled = true; btn.innerHTML = `<span class="spinner"></span>Création…`;
+  const { error } = await POST("/encheres", { produitId, prixDepart, dateDebut: debut, dateFin: fin });
+  btn.disabled = false; btn.textContent = "Créer l'enchère";
+  if (error) { showToast(error, "error"); return; }
+  showToast("Enchère créée ✓", "success");
+  document.getElementById("en-prix-depart").value = "";
+  renderEncheres();
+}
+async function doSupprimerEnchere(id) {
+  if (!confirm("Supprimer cette enchère ?")) return;
+  const { error } = await DELETE(`/encheres/${id}`);
+  if (error) { showToast(error, "error"); return; }
+  showToast("Enchère supprimée", "success");
+  renderEncheres();
+}
+async function testerEnchere(enchereId, prixActuel) {
+  const montant = prompt(`Montant de l'offre de test (supérieur à ${prixActuel} FCFA) :`);
+  if (!montant) return;
+  const { error } = await PUT(`/encheres/${enchereId}/encherir`, { montant: parseFloat(montant) });
+  if (error) { showToast(error, "error"); return; }
+  showToast("Offre de test enregistrée ✓", "success");
+  renderEncheres();
+}
+
+/* ── ACTIONS PRODUIT (Admin) ──
+   L'admin ne peut plus modifier un produit — seulement le supprimer
+   (suppression douce, réversible), le mettre en avant, ou juste le
+   consulter en détail (lecture seule). */
+function viewProductDetails(productId) {
+  const p = STATE.products.find(x => x.id === productId); if (!p) return;
+  const img = (p.imageBase64)
+    ? `<img src="${p.imageBase64}" alt="${p.nom}" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-bottom:1rem">`
+    : `<div style="width:100%;height:140px;display:flex;align-items:center;justify-content:center;font-size:3rem;background:#F0EEFB;border-radius:10px;margin-bottom:1rem">${p.emoji || "📦"}</div>`;
+  document.getElementById("view-product-body").innerHTML = `
+    ${img}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;font-size:0.9rem">
+      <div><div style="color:#7070A0;font-size:0.78rem">Nom</div><strong>${p.nom}</strong></div>
+      <div><div style="color:#7070A0;font-size:0.78rem">Catégorie</div><strong>${p.categorie}</strong></div>
+      <div><div style="color:#7070A0;font-size:0.78rem">Prix</div><strong>${(p.prix||0).toLocaleString('fr-FR')} FCFA</strong></div>
+      <div><div style="color:#7070A0;font-size:0.78rem">Prix barré</div><strong>${p.prixBarre ? p.prixBarre.toLocaleString('fr-FR') + " FCFA" : "—"}</strong></div>
+      <div><div style="color:#7070A0;font-size:0.78rem">Stock</div><strong>${p.stock} unités</strong></div>
+      <div><div style="color:#7070A0;font-size:0.78rem">Vendeur</div><strong>${p.vendeurNom || "—"}</strong></div>
+      <div><div style="color:#7070A0;font-size:0.78rem">En promotion</div><strong>${p.enPromotion ? "Oui" : "Non"}</strong></div>
+      <div><div style="color:#7070A0;font-size:0.78rem">Mis en avant</div><strong>${p.misEnAvant ? "Oui" : "Non"}</strong></div>
+    </div>
+    ${p.description ? `<div style="margin-top:0.9rem"><div style="color:#7070A0;font-size:0.78rem">Description</div>${p.description}</div>` : ""}
+  `;
+  document.getElementById("view-product-modal").classList.add("open");
+}
+function closeViewModal() { document.getElementById("view-product-modal").classList.remove("open"); }
+async function deleteProductItem(productId) {
+  if (!confirm("Supprimer ce produit ? Il restera visible ici (grisé) et pourra être restauré.")) return;
+  if (!usingDemoData) { const { error } = await deleteProduct(productId); if (error && error !== "NETWORK_ERROR") { showToast(error, "error"); return; } }
+  const p = STATE.products.find(x => x.id === productId); if (p) p.statut = "SUPPRIME";
+  showToast("Produit supprimé (restaurable)", "warning");
+  renderProducts();
+  setStatCard("s-products", STATE.products.filter(x => x.statut !== "SUPPRIME").length, "");
+}
+async function restoreProductItem(productId) {
+  if (!usingDemoData) { const { error } = await restoreProduct(productId); if (error && error !== "NETWORK_ERROR") { showToast(error, "error"); return; } }
+  const p = STATE.products.find(x => x.id === productId); if (p) p.statut = "ACTIF";
+  showToast("Produit restauré ✓", "success");
+  renderProducts();
+  setStatCard("s-products", STATE.products.filter(x => x.statut !== "SUPPRIME").length, "");
+}
+async function toggleFeatured(productId, value) {
+  if (!usingDemoData) { const { error } = await setProductFeatured(productId, value); if (error && error !== "NETWORK_ERROR") { showToast(error, "error"); return; } }
+  const p = STATE.products.find(x => x.id === productId); if (p) p.misEnAvant = value;
+  showToast(value ? "Produit mis en avant sur l'accueil ✓" : "Retiré de la mise en avant", "success");
+  renderProducts();
+}
+
+/* ── ROUTER SPA ── */
+const SECTION_RENDER = { dashboard: renderDashboard, products: renderProducts, orders: renderOrders, users: renderUsers, invitations: renderInvitations, settings: renderSettings, encheres: renderEncheres };
+const SECTION_TITLES = { dashboard: "Tableau de bord", products: "Gestion des produits", orders: "Gestion des commandes", users: "Gestion des utilisateurs", invitations: "Invitations administrateur" };
+function goSection(id) {
+  document.querySelectorAll(".admin-section").forEach(s => s.classList.remove("active"));
+  document.querySelectorAll(".menu-item").forEach(m => m.classList.remove("active"));
+  document.getElementById(`sec-${id}`).classList.add("active");
+  document.getElementById(`mi-${id}`)?.classList.add("active");
+  document.getElementById("topbar-title").textContent = SECTION_TITLES[id] || id;
+  if (SECTION_RENDER[id]) SECTION_RENDER[id]();
+}
+function filterTable(tbodyId, query) {
+  const q = query.toLowerCase();
+  document.querySelectorAll(`#${tbodyId} tr`).forEach(row => { row.style.display = row.textContent.toLowerCase().includes(q) ? "" : "none"; });
+}
+function globalSearch(q) { if (q.length >= 2) showToast(`Recherche de "${q}"…`); }
+function goProfil() { window.location.href = "../profil/Profil.html"; }
+async function doLogout() { if (!confirm("Se déconnecter ?")) return; await logout(); window.location.href = "../home/Accueil.html"; }
+</script>
+</body>
+</html>

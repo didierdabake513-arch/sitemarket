@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assigamé – Mon Profil</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../styles/base.css">
+<link rel="stylesheet" href="../../styles/components.css">
+<link rel="stylesheet" href="../../styles/buttons.css">
+<style>
+.topbar {
+  background: #2D1B69; height: 62px; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 16px rgba(45,27,105,0.3);
+}
+.topbar-logo { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 1.3rem; color: #fff; text-decoration: none; display: flex; align-items: center; gap: 6px; }
+.topbar-logo span { color: #F5A623; }
+
+.layout { display: grid; grid-template-columns: 270px 1fr; gap: 2rem; max-width: 1080px; margin: 2rem auto; padding: 0 1.5rem; }
+
+/* Carte "Devenir vendeur" */
+.seller-promo {
+  background: linear-gradient(135deg, #1E8449 0%, #27AE60 100%);
+  border-radius: 14px; padding: 1.5rem; margin-bottom: 1.5rem; color: #fff;
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+}
+.seller-promo h4 { font-size: 1.05rem; margin-bottom: 4px; }
+.seller-promo p { font-size: 0.85rem; color: rgba(255,255,255,0.85); }
+.seller-active-chip {
+  background: rgba(255,255,255,0.18); border-radius: 20px; padding: 6px 14px;
+  font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 8px;
+}
+
+@media (max-width: 768px) { .layout { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="topbar-logo" href="../home/Accueil.html"><i class="fa-solid fa-bag-shopping brand-icon"></i> <span class="brand-my">My</span> <span class="brand-b">B</span> Assigamé</a>
+  <div class="topbar-right">
+    <a class="btn-topbar" href="../vendeur/DashboardVendeur.html" id="topbarVendeurLink" style="display:none"><i class="fa-solid fa-store"></i> Espace vendeur</a>
+    <a class="btn-topbar" href="../livreur/DashboardLivreur.html" id="topbarLivreurLink" style="display:none"><i class="fa-solid fa-truck"></i> Mes livraisons</a>
+    <a class="btn-topbar" href="../messagerie/Messagerie.html"><i class="fa-solid fa-comment-dots"></i> Messages</a>
+    <button class="btn-topbar" id="contactAdminBtn" style="display:none" onclick="onContacterAdminClick()"><i class="fa-solid fa-headset"></i> Contacter l'administrateur</button>
+    <a class="btn-topbar" href="../panier/Panier.html"><i class="fa-solid fa-cart-shopping"></i> Panier</a>
+    <button class="btn-topbar" id="exitProfilBtn" onclick="exitProfil()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sortir</button>
+    <button class="btn-logout-light" onclick="doLogout()">Déconnexion</button>
+  </div>
+</div>
+
+<div class="layout">
+
+  <div class="profil-sidebar">
+    <div class="avatar-zone">
+      <div class="avatar-circle" id="avatar-initial">?</div>
+      <div class="avatar-name"  id="avatar-name">Chargement…</div>
+      <div class="avatar-email" id="avatar-email"></div>
+      <div class="avatar-badge" id="avatar-role">CLIENT</div>
+    </div>
+    <nav class="profil-nav">
+      <a class="active" id="nav-infos"    href="#infos"    onclick="return showPanel('infos')"><span><i class="fa-solid fa-user"></i></span> Mes informations</a>
+      <a id="nav-orders"   href="#orders"   onclick="return showPanel('orders')"><span><i class="fa-solid fa-box"></i></span> Mes commandes</a>
+      <a id="nav-security" href="#security" onclick="return showPanel('security')"><span><i class="fa-solid fa-lock"></i></span> Sécurité</a>
+      <a id="nav-notif"    href="#notif"    onclick="return showPanel('notif')"><span><i class="fa-solid fa-bell"></i></span> Notifications</a>
+    </nav>
+  </div>
+
+  <div>
+
+    <!-- PANEL : MES INFORMATIONS -->
+    <div class="panel active" id="panel-infos">
+
+      <!-- ── Carte Devenir vendeur / déjà vendeur ── -->
+      <div class="seller-promo" id="sellerPromo" style="display:none">
+        <div>
+          <h4 id="sellerPromoTitle"><i class="fa-solid fa-store"></i> Vendez vos produits sur Assigamé</h4>
+          <p id="sellerPromoText">Activez votre espace vendeur gratuitement et commencez à vendre dès aujourd'hui.</p>
+        </div>
+        <button class="btn-become-seller" id="sellerPromoBtn" onclick="onSellerPromoClick()">Devenir vendeur</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Informations personnelles</div>
+        <div id="form-skeleton">
+          <div class="skeleton" style="height:14px;width:60%;margin-bottom:12px"></div>
+          <div class="skeleton" style="height:40px;margin-bottom:14px"></div>
+          <div class="skeleton" style="height:14px;width:40%;margin-bottom:12px"></div>
+          <div class="skeleton" style="height:40px;margin-bottom:14px"></div>
+        </div>
+        <div id="infos-form" style="display:none">
+          <div class="form-row">
+            <div class="form-group"><label>Nom</label><div class="input-wrap"><span class="input-ico"><i class="fa-solid fa-user"></i></span><input class="form-control" id="p-nom" placeholder="Doe"></div></div>
+            <div class="form-group"><label>Prénom</label><div class="input-wrap"><span class="input-ico"><i class="fa-solid fa-user"></i></span><input class="form-control" id="p-prenom" placeholder="John"></div></div>
+          </div>
+          <div class="form-group"><label>Adresse email</label><div class="input-wrap"><span class="input-ico"><i class="fa-solid fa-envelope"></i></span><input class="form-control" type="email" id="p-email" placeholder="vous@example.com"></div></div>
+          <div class="form-row">
+            <div class="form-group"><label>Téléphone</label><div class="input-wrap"><span class="input-ico"><i class="fa-solid fa-phone"></i></span><input class="form-control" id="p-tel" placeholder="+228 90 00 00 00"></div></div>
+            <div class="form-group"><label>Date de naissance</label><div class="input-wrap"><span class="input-ico"><i class="fa-solid fa-calendar"></i></span><input class="form-control" type="date" id="p-dob"></div></div>
+          </div>
+          <div class="form-group"><label>Adresse de livraison principale</label><div class="input-wrap"><span class="input-ico"><i class="fa-solid fa-location-dot"></i></span><input class="form-control" id="p-addr" placeholder="Quartier, Rue, Lomé"></div></div>
+          <div class="form-group"><label>Région</label><div class="input-wrap"><span class="input-ico"><i class="fa-solid fa-map-location-dot"></i></span>
+            <select class="form-control" id="p-region" style="padding-left:36px">
+              <option value="Maritime">Maritime</option><option value="Plateaux">Plateaux</option>
+              <option value="Centrale">Centrale</option><option value="Kara">Kara</option><option value="Savanes">Savanes</option>
+            </select></div></div>
+          <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:0.5rem">
+            <button class="btn-primary" onclick="saveInfos()">Enregistrer les modifications</button>
+          </div>
+          <div id="client-delete-wrap" style="display:none;margin-top:1rem">
+            <button class="btn-danger" onclick="deleteAccount()">Supprimer mon compte</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL : COMMANDES -->
+    <div class="panel" id="panel-orders">
+      <div style="font-family:'Sora',sans-serif;font-weight:800;font-size:1.25rem;color:#2D1B69;margin-bottom:1.2rem">Mes commandes</div>
+      <div id="orders-list">
+        <div class="skeleton" style="height:72px;border-radius:14px;margin-bottom:1rem"></div>
+        <div class="skeleton" style="height:72px;border-radius:14px"></div>
+      </div>
+    </div>
+
+    <!-- PANEL : SÉCURITÉ -->
+    <div class="panel" id="panel-security">
+      <div class="card">
+        <div class="card-title">Changer le mot de passe</div>
+        <div class="form-group"><label>Mot de passe actuel</label>
+          <div class="input-wrap"><span class="input-ico"><i class="fa-solid fa-key"></i></span><input class="form-control" type="password" id="sec-old" placeholder="••••••••">
+            <button class="eye-btn" type="button" onclick="togglePwd('sec-old',this)"><i class="fa-solid fa-eye"></i></button></div>
+        </div>
+        <div class="form-group"><label>Nouveau mot de passe</label>
+          <div class="input-wrap"><span class="input-ico"><i class="fa-solid fa-key"></i></span><input class="form-control" type="password" id="sec-new" placeholder="Min. 8 caractères" oninput="updateStrengthBar('sec-bar','sec-lbl',this.value)">
+            <button class="eye-btn" type="button" onclick="togglePwd('sec-new',this)"><i class="fa-solid fa-eye"></i></button></div>
+          <div class="strength-bar" id="sec-bar"></div><div class="strength-label" id="sec-lbl"></div>
+        </div>
+        <div class="form-group"><label>Confirmer le nouveau mot de passe</label>
+          <div class="input-wrap"><span class="input-ico"><i class="fa-solid fa-key"></i></span><input class="form-control" type="password" id="sec-confirm" placeholder="••••••••">
+            <button class="eye-btn" type="button" onclick="togglePwd('sec-confirm',this)"><i class="fa-solid fa-eye"></i></button></div>
+        </div>
+        <button class="btn-primary" onclick="doChangePwd()">Changer le mot de passe</button>
+      </div>
+      <div class="card" id="admin-delete-wrap" style="display:none;margin-top:1.5rem">
+        <div class="card-title">Suppression du compte administrateur</div>
+        <p class="text-sm text-muted" style="margin-bottom:1rem">Cette action est irréversible. Toutes vos données seront effacées.</p>
+        <button class="btn-danger" onclick="deleteAccount()">Supprimer mon compte</button>
+      </div>
+    </div>
+
+    <!-- PANEL : NOTIFICATIONS -->
+    <div class="panel" id="panel-notif">
+      <div class="card">
+        <div class="card-title">Préférences de notifications</div>
+        <div id="notif-list"></div>
+        <button class="btn-primary" style="margin-top:1rem" onclick="saveNotif(event)">Enregistrer</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="../../services/api.js"></script>
+<script src="../../services/authService.js"></script>
+<script src="../../services/userService.js"></script>
+<script src="../../services/orderService.js"></script>
+<script src="../../services/messageService.js"></script>
+<script src="../../utils/toast.js"></script>
+<script src="../../utils/featureGate.js"></script>
+<script>
+const STATUS_CLASS = { "LIVREE":"badge-delivered","EXPEDIEE":"badge-shipping","EN_ATTENTE":"badge-pending","ANNULEE":"badge-cancelled" };
+const STATUS_LABEL = { "LIVREE":"Livrée","EXPEDIEE":"Expédiée","EN_ATTENTE":"En attente","ANNULEE":"Annulée" };
+
+const NOTIF_CONFIG = [
+  { id:"n1", label:"Confirmation de commande par email",  default:true,  gated:true },
+  { id:"n2", label:"Mise à jour du statut de livraison",  default:true,  gated:true },
+  { id:"n3", label:"Nouvelles promotions et offres",      default:false, gated:true },
+  { id:"n4", label:"Newsletter hebdomadaire",              default:false, gated:true },
+  { id:"n5", label:"Alertes de sécurité du compte",        default:true,  gated:true },
+  { id:"n6", label:"Notifications push sur mobile",          default:false, gated:true },
+  { id:"n7", label:"Alertes SMS (livraison)",                default:false, gated:true },
+];
+
+window.addEventListener("DOMContentLoaded", async () => {
+  if (!isLoggedIn()) { window.location.href = "../auth/Auth.html"; return; }
+  await loadUserProfile();
+  await loadMyOrders();
+  buildNotifPanel();
+  const tab = (location.hash || "#infos").replace("#", "");
+  if (["infos", "orders", "security", "notif"].includes(tab)) showPanel(tab);
+});
+
+async function loadUserProfile() {
+  let user = getCurrentUser();
+  if (!user) {
+    const { data, error } = await getMyProfile();
+    if (!error && data) { setCurrentUser(data); user = data; }
+  }
+  if (!user) { window.location.href = "../auth/Auth.html?return=" + encodeURIComponent(window.location.href); return; }
+  fillProfileForm(user);
+  renderSellerPromo(user);
+  renderDeleteAccountUi(user);
+  document.getElementById("topbarVendeurLink").style.display = user.role === "VENDEUR" ? "" : "none";
+  document.getElementById("topbarLivreurLink").style.display = user.role === "LIVREUR" ? "" : "none";
+  const contactAdminBtn = document.getElementById("contactAdminBtn");
+  if (contactAdminBtn) contactAdminBtn.style.display = user.role === "ADMIN" ? "none" : "";
+}
+
+/* Ouvre (ou récupère) la conversation avec l'administrateur, quel que soit
+   le rôle du compte connecté (client, vendeur, livreur). */
+async function onContacterAdminClick() {
+  const { data, error } = await contacterAdmin();
+  if (error) { toast(error, "error"); return; }
+  window.location.href = `../messagerie/Messagerie.html?conv=${data.id}`;
+}
+
+/* Bouton "Sortir" : revient à la page précédente (ex. le produit qu'on
+   consultait), comme le lien retour d'une fiche produit — sinon, repli
+   sur l'accueil s'il n'y a pas d'historique de navigation. */
+function exitProfil() {
+  if (document.referrer && document.referrer.indexOf(window.location.origin) === 0) {
+    window.history.back();
+  } else {
+    window.location.href = "../home/Accueil.html";
+  }
+}
+
+function fillProfileForm(user) {
+  const initiale = ((user.prenom || user.nom || "?")[0]).toUpperCase();
+  document.getElementById("avatar-initial").textContent = initiale;
+  document.getElementById("avatar-name").textContent   = `${user.prenom||""} ${user.nom||""}`.trim();
+  document.getElementById("avatar-email").textContent  = user.email || "";
+  document.getElementById("avatar-role").textContent   = user.role  || "CLIENT";
+
+  document.getElementById("p-nom").value    = user.nom           || "";
+  document.getElementById("p-prenom").value = user.prenom        || "";
+  document.getElementById("p-email").value  = user.email         || "";
+  document.getElementById("p-tel").value    = user.telephone     || "";
+  document.getElementById("p-dob").value    = user.dateNaissance || "";
+  document.getElementById("p-addr").value   = user.adresse       || "";
+  document.getElementById("p-region").value = user.region        || "Maritime";
+
+  document.getElementById("form-skeleton").style.display = "none";
+  document.getElementById("infos-form").style.display    = "block";
+}
+
+/* ── Carte "Devenir vendeur" : visible seulement si CLIENT.
+   Si déjà VENDEUR, affiche un lien direct vers le dashboard vendeur. ── */
+function renderSellerPromo(user) {
+  const box = document.getElementById("sellerPromo");
+  if (user.role === "CLIENT") {
+    box.style.display = "flex";
+    document.getElementById("sellerPromoTitle").innerHTML = '<i class="fa-solid fa-store"></i> Vendez vos produits sur Assigamé';
+    document.getElementById("sellerPromoText").textContent  = "Activez votre espace vendeur gratuitement et commencez à vendre dès aujourd'hui.";
+    document.getElementById("sellerPromoBtn").textContent   = "Devenir vendeur";
+    document.getElementById("sellerPromoBtn").onclick       = onSellerPromoClick;
+  } else {
+    /* VENDEUR : plus de carte ici — l'accès au dashboard vendeur se fait
+       directement depuis le lien "Espace vendeur" dans la barre de nav. */
+    box.style.display = "none";
+  }
+}
+
+async function onSellerPromoClick() {
+  if (!confirm("Activer votre espace vendeur maintenant ? Vous pourrez ajouter des produits immédiatement.")) return;
+  const btn = document.getElementById("sellerPromoBtn");
+  btn.disabled = true; btn.innerHTML = `<span class="spinner"></span>Activation…`;
+
+  const { user, error, offline } = await becomeVendeur();
+  if (error) { showToast(error, "error"); btn.disabled = false; btn.textContent = "Devenir vendeur"; return; }
+
+  if (offline) showToast("Compte vendeur activé (mode démo)", "warning");
+  else         showToast("Bienvenue dans votre espace vendeur !", "success");
+
+  setTimeout(() => { window.location.href = "../home/Accueil.html"; }, 900);
+}
+
+async function loadMyOrders() {
+  const { data } = await getMyOrders();
+  const list = document.getElementById("orders-list");
+  const orders = (data && data.length) ? data : [];
+
+  if (!orders.length) {
+    list.innerHTML = `<div class="empty-state"><span class="empty-icon"><i class="fa-solid fa-box"></i></span><p>Vous n'avez pas encore de commandes</p></div>`;
+    return;
+  }
+  list.innerHTML = orders.map(order => {
+    const cls = STATUS_CLASS[order.statut] || "badge-pending", label = STATUS_LABEL[order.statut] || order.statut;
+    const date = new Date(order.dateCommande || order.date).toLocaleDateString("fr-FR");
+    const canCancel = order.statut === "EN_ATTENTE";
+    const canShowQr = order.codeLivraison && (order.statut === "EN_ATTENTE" || order.statut === "EXPEDIEE");
+    return `
+      <div class="order-card">
+        <div class="order-icon"><i class="fa-solid fa-box"></i></div>
+        <div class="order-info"><div class="order-ref">${order.reference || order.id}</div><div class="order-meta">${date} · ${order.nbArticles || "?"} article(s)</div></div>
+        <div class="order-right">
+          <div class="order-total">${(order.montantTotal||0).toLocaleString('fr-FR')} FCFA</div>
+          <span class="badge ${cls}">${label}</span>
+          ${canShowQr ? `<button class="btn-icon view" style="margin-left:8px" onclick="showOrderQr('${order.codeLivraison}','${order.reference||order.id}')"><i class="fa-solid fa-qrcode"></i> QR livraison</button>` : ""}
+          ${canCancel ? `<button class="btn-icon del" style="margin-left:8px" onclick="cancelMyOrder(${order.id})"><i class="fa-solid fa-ban"></i> Annuler</button>` : ""}
+        </div>
+      </div>`;
+  }).join("");
+}
+function showOrderQr(codeLivraison, reference) {
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay open";
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div class="modal-box" style="text-align:center">
+      <div class="modal-title">Code de livraison — ${reference}</div>
+      <div id="qrCodeHostProfil" style="display:flex;justify-content:center;margin:1rem 0"></div>
+      <p style="font-size:0.82rem;color:#7070A0;margin-bottom:1rem">Montrez ce code au livreur au moment de la remise du colis.</p>
+      <button class="btn-cancel" style="width:100%" onclick="this.closest('.modal-overlay').remove()">Fermer</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  if (window.QRCode) new QRCode(document.getElementById("qrCodeHostProfil"), { text: codeLivraison, width: 160, height: 160 });
+}
+async function cancelMyOrder(orderId) {
+  if (!confirm("Annuler cette commande ? Cette action est irréversible.")) return;
+  const { error } = await updateOrderStatus(orderId, "ANNULEE");
+  if (error) { showToast(error, "error"); return; }
+  showToast("Commande annulée", "success");
+  loadMyOrders();
+}
+
+function showPanel(id) {
+  document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".profil-nav a").forEach(a => a.classList.remove("active"));
+  document.getElementById(`panel-${id}`).classList.add("active");
+  document.getElementById(`nav-${id}`).classList.add("active");
+  history.replaceState(null, "", `#${id}`);
+  return false;
+}
+
+async function saveInfos() {
+  const profile = {
+    nom: document.getElementById("p-nom").value.trim(), prenom: document.getElementById("p-prenom").value.trim(),
+    email: document.getElementById("p-email").value.trim(), telephone: document.getElementById("p-tel").value.trim(),
+    dateNaissance: document.getElementById("p-dob").value, adresse: document.getElementById("p-addr").value.trim(),
+    region: document.getElementById("p-region").value,
+  };
+  const { error } = await updateMyProfile(profile);
+  if (error && error !== "NETWORK_ERROR") { showToast(error, "error"); return; }
+  const user = getCurrentUser() || {};
+  setCurrentUser({ ...user, ...profile });
+  showToast("Informations mises à jour ✓", "success");
+}
+
+async function doChangePwd() {
+  const oldP = document.getElementById("sec-old").value, newP = document.getElementById("sec-new").value, cnf = document.getElementById("sec-confirm").value;
+  if (!oldP)          { showToast("Mot de passe actuel requis", "error"); return; }
+  if (newP.length < 8){ showToast("Min. 8 caractères", "error"); return; }
+  if (newP !== cnf)   { showToast("Les mots de passe ne correspondent pas", "error"); return; }
+  const { error } = await changeMyPassword(oldP, newP);
+  if (error && error !== "NETWORK_ERROR") { showToast(error, "error"); return; }
+  showToast("Mot de passe modifié ✓", "success");
+  ["sec-old","sec-new","sec-confirm"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("sec-bar").style.width = "0"; document.getElementById("sec-lbl").textContent = "";
+}
+
+function buildNotifPanel() {
+  document.getElementById("notif-list").innerHTML = NOTIF_CONFIG.map(n => `
+    <div class="notif-row"><input type="checkbox" id="${n.id}" ${n.default?"checked":""} onclick="return onNotifToggle(event, '${n.id}')"><label for="${n.id}">${n.label}</label></div>`).join("");
+}
+function onNotifToggle(event, id) {
+  if (!isGatedNotification(id)) return true;
+  event.preventDefault();
+  showComingSoon(event);
+  return false;
+}
+async function saveNotif(event) {
+  return showComingSoon(event);
+}
+
+function renderDeleteAccountUi(user) {
+  const clientWrap = document.getElementById("client-delete-wrap");
+  const adminWrap  = document.getElementById("admin-delete-wrap");
+  if (user.role === "ADMIN") {
+    if (clientWrap) clientWrap.style.display = "none";
+    if (adminWrap)  adminWrap.style.display  = "block";
+  } else {
+    if (clientWrap) clientWrap.style.display = "block";
+    if (adminWrap)  adminWrap.style.display  = "none";
+  }
+}
+
+async function deleteAccount() {
+  if (!confirm("Êtes-vous sûr ? Cette action est irréversible.")) return;
+  await deleteMyAccount();
+  await logout();
+  window.location.href = "../home/Accueil.html";
+}
+
+async function doLogout() { await logout(); window.location.href = "../home/Accueil.html"; }
+</script>
+</body>
+</html>

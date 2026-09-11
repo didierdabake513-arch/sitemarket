@@ -1,0 +1,398 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assigamé – Votre marché en ligne au Togo</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../styles/base.css">
+<link rel="stylesheet" href="../../styles/components.css">
+<link rel="stylesheet" href="../../styles/buttons.css">
+<style>
+/* ── Fond de PAGE : carrousel photo derrière tout le site (accueil ET
+   catalogue partagent le même dossier back "commerce" + les produits
+   mis en avant par l'admin — voir renderSiteBackground()). Les sections
+   ci-dessous flottent par-dessus dans des cartes translucides pour que
+   le texte reste lisible. ── */
+.site-bg-carousel { position: fixed; inset: 0; z-index: -2; }
+.site-bg-slide { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transition: opacity 1.8s ease-in-out; }
+.site-bg-slide.active { opacity: 1; }
+.site-bg-overlay { position: fixed; inset: 0; z-index: -1; background: rgba(45,27,105,0.22); }
+
+/* ── HERO (spécifique à cette page) ── */
+.hero {
+  background: linear-gradient(135deg, #2D1B69 0%, #4A30A0 60%, #6B48C0 100%);
+  padding: 4rem 2rem 5rem; position: relative; overflow: hidden;
+  clip-path: polygon(0 0, 100% 0, 100% 88%, 0 100%);
+}
+.hero::before {
+  content: ''; position: absolute; top: -40%; right: -10%;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(245,166,35,0.2) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.hero-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; position: relative; z-index: 1; }
+.hero-text h1 { font-size: 3rem; font-weight: 800; color: #fff; line-height: 1.15; margin-bottom: 1rem; }
+.hero-text h1 span { color: #F5A623; }
+.hero-text p { color: rgba(255,255,255,0.8); font-size: 1.1rem; margin-bottom: 2rem; }
+.hero-btns { display: flex; gap: 1rem; flex-wrap: wrap; }
+/* ── Carrousel plein cadre (photos produits mis en avant) ── */
+.hero-visual {
+  position: relative; border-radius: 18px; overflow: hidden; min-height: 340px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+.hero-slide {
+  position: absolute; inset: 0; background-size: cover; background-position: center;
+  opacity: 0; transition: opacity 1.2s ease-in-out;
+}
+.hero-slide.active { opacity: 1; }
+.hero-caption {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; padding: 1.1rem 1.3rem; color: #fff;
+}
+.hero-caption .hc-tag {
+  display: inline-block; background: #F5A623; color: #2D1B69; font-weight: 800; font-size: 0.7rem;
+  padding: 3px 10px; border-radius: 20px; margin-bottom: 6px; letter-spacing: 0.03em;
+}
+.hero-caption h4 { font-size: 1.15rem; font-weight: 800; font-family: 'Sora', sans-serif; text-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+.hero-caption p { font-size: 0.82rem; color: rgba(255,255,255,0.85); margin-top: 2px; text-shadow: 0 1px 4px rgba(0,0,0,0.4); }
+.hero-slide::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(0deg, rgba(26,10,64,0.75) 0%, rgba(26,10,64,0.05) 55%);
+}
+
+/* ── Bandeau invités ── */
+.guest-banner {
+  position: relative; padding: 10px 2rem; text-align: center; font-size: 0.82rem; min-height: 20px;
+  background: rgba(45,27,105,0.82);
+}
+.guest-banner-content { position: relative; z-index: 1; color: #fff; }
+.guest-banner-content a { color: #F5A623; font-weight: 700; text-decoration: underline; }
+
+/* ── SECTIONS ── */
+.section {
+  max-width: 1100px; margin: 2rem auto; padding: 2.5rem 2rem;
+  background: rgba(255,255,255,0.95); border-radius: 24px; box-shadow: 0 10px 40px rgba(45,27,105,0.10);
+}
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+.section-title { font-size: 1.6rem; font-weight: 700; color: #2D1B69; }
+.section-title span { color: #F5A623; }
+.see-all { color: #4A30A0; text-decoration: none; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+.see-all:hover { text-decoration: underline; }
+
+.cats-grid { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 1rem; }
+.cats-grid::-webkit-scrollbar { height: 4px; }
+.cats-grid::-webkit-scrollbar-thumb { background: #DDD9F5; border-radius: 4px; }
+.cat-chip {
+  background: #fff; border: 2px solid #DDD9F5; border-radius: 50px;
+  padding: 8px 20px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+  white-space: nowrap; display: flex; align-items: center; gap: 8px;
+  transition: border-color 0.2s, background 0.2s, color 0.2s; color: #1A1A2E; text-decoration: none;
+}
+.cat-chip:hover { background: #2D1B69; border-color: #2D1B69; color: #fff; }
+
+.products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 1.5rem; }
+.product-card {
+  background: #fff; border-radius: 14px; overflow: hidden;
+  box-shadow: 0 4px 20px rgba(45,27,105,0.1); transition: transform 0.25s, box-shadow 0.25s;
+  cursor: pointer; position: relative; text-decoration: none; color: #1A1A2E; display: block;
+}
+.product-card:hover { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(45,27,105,0.18); }
+.product-img { width: 100%; aspect-ratio: 1; background: #F0EEFB; display: flex; align-items: center; justify-content: center; font-size: 4rem; position: relative; }
+.badge-promo { position: absolute; top: 10px; left: 10px; background: #E74C3C; color: #fff; border-radius: 6px; padding: 2px 8px; font-size: 0.75rem; font-weight: 700; }
+.badge-new   { position: absolute; top: 10px; left: 10px; background: #27AE60; color: #fff; border-radius: 6px; padding: 2px 8px; font-size: 0.75rem; font-weight: 700; }
+.product-info { padding: 1rem; }
+.product-info h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; }
+.product-info .cat-tag { color: #7070A0; font-size: 0.78rem; margin-bottom: 8px; }
+.product-footer { display: flex; justify-content: space-between; align-items: center; }
+.price { font-family: 'Sora', sans-serif; font-size: 1.05rem; font-weight: 700; color: #2D1B69; }
+.price-old { font-size: 0.8rem; color: #7070A0; text-decoration: line-through; margin-left: 4px; }
+
+/* ── PROMO ── */
+.promo-section { background: linear-gradient(135deg, #F5A623 0%, #FF8C00 100%); padding: 2.5rem 2rem; }
+.promo-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.promo-inner h2 { font-size: 1.8rem; color: #2D1B69; font-weight: 800; }
+.promo-inner p  { color: rgba(45,27,105,0.8); margin-top: 4px; }
+.promo-inner .btn-primary { background: #2D1B69; color: #fff; }
+.promo-inner .btn-primary:hover { box-shadow: 0 8px 24px rgba(45,27,105,0.4); }
+
+.empty-catalog { text-align: center; padding: 2.5rem 1rem; color: #7070A0; }
+.empty-catalog h3 { color: #2D1B69; margin-bottom: 0.5rem; }
+.empty-catalog p { margin-bottom: 1.25rem; }
+
+@media (max-width: 768px) {
+  .hero-inner { grid-template-columns: 1fr; }
+  .hero-visual { display: none; }
+  .hero-text h1 { font-size: 2rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="site-bg-carousel" id="siteBgCarousel"></div>
+<div class="site-bg-overlay"></div>
+
+<nav class="site-nav">
+  <a class="nav-logo" href="../home/Accueil.html"><i class="fa-solid fa-bag-shopping brand-icon"></i> <span class="brand-my">My</span> <span class="brand-b">B</span> Assigamé</a>
+  <div class="nav-links">
+    <a href="../home/Accueil.html" class="active">Accueil</a>
+    <a href="../catalogue/Catalogue.html">Catalogue</a>
+    <a href="../vendeur/DashboardVendeur.html" id="navVendeurLink" style="display:none">Espace vendeur</a>
+    <a href="../livreur/DashboardLivreur.html" id="navLivreurLink" style="display:none">Mes livraisons</a>
+  </div>
+  <div class="nav-right">
+    <div class="nav-search-wrap">
+      <i class="fa-solid fa-magnifying-glass search-ico"></i>
+      <input class="nav-search" placeholder="Rechercher..." id="navSearchInput" onkeydown="if(event.key==='Enter') goSearch(this.value)">
+    </div>
+    <a class="cart-btn" href="../panier/Panier.html"><i class="fa-solid fa-cart-shopping"></i> Panier <span class="cart-badge" id="cart-count">0</span></a>
+    <a class="btn-login-nav" id="navAuthBtn" href="../auth/Auth.html">Connexion</a>
+  </div>
+</nav>
+
+<!-- Bandeau pour visiteurs non connectés : incitation à l'inscription.
+     Sa teinte violette laisse transparaître le carrousel photo de fond
+     de page (voir .site-bg-carousel) au lieu d'un fond blanc. -->
+<div class="guest-banner hide-mobile" id="guestBanner" style="display:none">
+  <div class="guest-banner-content">
+    <i class="fa-solid fa-sparkles"></i> <a href="../auth/Auth.html?tab=register">Créez un compte</a> pour suivre vos commandes en temps réel.
+    <a href="#" onclick="return showComingSoon(event, 'Estimation de livraison')" style="margin-left:4px;font-weight:700">Estimation de livraison précise</a>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <h1>Le meilleur du shopping <span>en ligne</span> au Togo</h1>
+      <p>Livraison rapide · Paiement sécurisé · Paiement à la livraison</p>
+      <div class="hero-btns">
+        <a class="btn-gold" href="../catalogue/Catalogue.html">Découvrir les produits</a>
+      </div>
+    </div>
+    <!-- Carrousel : produits mis en avant par l'admin (images en base). -->
+    <div class="hero-visual" id="heroVisual">
+      <div class="hero-caption" id="heroCaption" style="display:none">
+        <span class="hc-tag">Mis en avant</span>
+        <h4 id="heroCaptionTitre"></h4>
+        <p id="heroCaptionTexte"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="section" style="padding-top:0">
+  <div class="section-header">
+    <div class="section-title">Produits <span>Populaires</span></div>
+    <a class="see-all" href="../catalogue/Catalogue.html">Voir tout →</a>
+  </div>
+  <div class="products-grid" id="popularGrid"></div>
+</div>
+
+<div class="promo-section" id="promoSection" style="display:none">
+  <div class="promo-inner">
+    <div><h2><i class="fa-solid fa-fire"></i> <span id="promoTitre"></span></h2><p id="promoSousTitre"></p></div>
+    <a class="btn-primary" id="promoBtn" href="../catalogue/Catalogue.html">Profiter des offres</a>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-header">
+    <div class="section-title">Nouveautés</div>
+    <a class="see-all" href="../catalogue/Catalogue.html">Voir tout →</a>
+  </div>
+  <div class="products-grid" id="newGrid"></div>
+</div>
+
+<footer class="site-footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="logo"><i class="fa-solid fa-bag-shopping brand-icon"></i> <span class="brand-my">My</span> <span class="brand-b">B</span> Assigamé</div>
+      <p>Votre marché en ligne de confiance au Togo.<br>Livraison partout à Lomé et dans les villes principales.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Navigation</h4>
+      <a href="../home/Accueil.html">Accueil</a>
+      <a href="../catalogue/Catalogue.html">Catalogue</a>
+      <a href="../panier/Panier.html">Mon panier</a>
+      <a href="../profil/Profil.html">Mon profil</a>
+    </div>
+    <div class="footer-col"><h4>Support</h4>
+      <a href="#" onclick="return showComingSoon(event,'FAQ')">FAQ</a>
+      <a href="#" onclick="return showComingSoon(event,'Livraison')">Livraison</a>
+      <a href="#" onclick="return showComingSoon(event,'Retours')">Retours</a>
+      <a href="#" onclick="return showComingSoon(event,'Contact')">Contact</a>
+    </div>
+    <div class="footer-col"><h4>Contact</h4><a><i class="fa-solid fa-phone"></i> +228 90 00 00 00</a><a><i class="fa-solid fa-envelope"></i> contact@assigame.tg</a><a><i class="fa-solid fa-location-dot"></i> Lomé, Togo</a></div>
+  </div>
+  <div class="footer-bottom">© 2026 Assigamé. Tous droits réservés.</div>
+</footer>
+
+<script src="../../services/api.js"></script>
+<script src="../../services/productService.js"></script>
+<script src="../../utils/toast.js"></script>
+<script src="../../utils/icons.js"></script>
+<script src="../../utils/featureGate.js"></script>
+<script>
+
+let ALL_PRODUCTS = [];
+
+const EMPTY_HTML = `
+  <div class="empty-catalog">
+    <h3>Le catalogue s'ouvre bientôt</h3>
+    <p>Les vendeurs publient leurs premiers articles. Créez un compte pour vendre les vôtres.</p>
+    <a class="btn-gold" href="../auth/Auth.html?tab=register">Devenir vendeur</a>
+  </div>`;
+
+function updateAuthBtn() {
+  const user = getCurrentUser();
+  const btn = document.getElementById("navAuthBtn");
+  const vendeurLink = document.getElementById("navVendeurLink");
+  const livreurLink = document.getElementById("navLivreurLink");
+  if (user) {
+    btn.textContent = user.prenom || "Profil";
+    btn.href = user.role === "ADMIN" ? "../admin/Dashboard.html" : "../profil/Profil.html";
+    if (vendeurLink) vendeurLink.style.display = user.role === "VENDEUR" ? "" : "none";
+    if (livreurLink) livreurLink.style.display = user.role === "LIVREUR" ? "" : "none";
+  } else {
+    btn.href = "../auth/Auth.html?return=" + encodeURIComponent(window.location.href);
+    document.getElementById("guestBanner").style.display = "block";
+  }
+}
+
+async function renderSiteBackground() {
+  const host = document.getElementById("siteBgCarousel");
+  let urls = [];
+  try { const r = await fetch("/api/images/commerce"); urls = r.ok ? await r.json() : []; } catch (e) { /* fond vide */ }
+  if (!urls.length) return;
+  host.innerHTML = urls.map((u, i) => `<div class="site-bg-slide ${i===0?'active':''}" style="background-image:url('${u}')"></div>`).join("");
+  if (urls.length < 2) return;
+  const slides = host.querySelectorAll(".site-bg-slide");
+  let current = 0;
+  setInterval(() => {
+    slides[current].classList.remove("active");
+    current = (current + 1) % slides.length;
+    slides[current].classList.add("active");
+  }, 5000);
+}
+
+function productCard(p) {
+  try {
+    const prix = p.prix || 0;
+    const badge = (p.enPromotion && p.prixBarre) ? `<div class="badge-promo">-${Math.round((1-prix/p.prixBarre)*100)}%</div>` : p.estNouveau ? `<div class="badge-new">NOUVEAU</div>` : "";
+    const oldP  = p.prixBarre ? `<span class="price-old">${p.prixBarre.toLocaleString('fr-FR')}</span>` : "";
+    return `
+      <a class="product-card" href="../produit/Produit.html?id=${p.id}">
+        <div class="product-img">${productEmoji(p)}${badge}</div>
+        <div class="product-info">
+          <h3>${p.nom || "Produit"}</h3>
+          <div class="cat-tag">${p.categorie || ""}</div>
+          <div class="product-footer">
+            <div><span class="price">${prix.toLocaleString('fr-FR')} FCFA</span>${oldP}</div>
+            <button class="add-btn" onclick="event.preventDefault();event.stopPropagation();quickAdd(${p.id})">+ Panier</button>
+          </div>
+        </div>
+      </a>`;
+  } catch (e) {
+    console.warn("[productCard] carte ignorée :", e, p);
+    return "";
+  }
+}
+
+function quickAdd(productId) {
+  const p = ALL_PRODUCTS.find(x => x.id === productId);
+  if (!p) return;
+  addToCart(productId, 1);
+  showToast(`${p.nom} ajouté au panier ✓`, "success");
+}
+
+async function loadProducts() {
+  const { data, error } = await getAllProducts();
+  ALL_PRODUCTS = (!error && Array.isArray(data)) ? data : [];
+}
+
+/* Carrousel héros = produits mis en avant (images base64). */
+async function initHeroCarousel() {
+  const host = document.getElementById("heroVisual");
+  const featuredUrls = ALL_PRODUCTS.filter(p => p.misEnAvant && p.imageBase64).map(p => p.imageBase64);
+  if (!featuredUrls.length) { host.style.display = "none"; return; }
+
+  const caption = document.getElementById("heroCaption");
+  host.querySelectorAll(".hero-slide").forEach(el => el.remove());
+  featuredUrls.forEach((u, i) => {
+    const slide = document.createElement("div");
+    slide.className = `hero-slide ${i===0?'active':''}`;
+    slide.style.backgroundImage = `url('${u}')`;
+    host.insertBefore(slide, caption);
+  });
+
+  await renderHeroCaption();
+
+  if (featuredUrls.length < 2) return;
+  const slides = host.querySelectorAll(".hero-slide");
+  let current = 0;
+  setInterval(() => {
+    slides[current].classList.remove("active");
+    current = (current + 1) % slides.length;
+    slides[current].classList.add("active");
+  }, 4500);
+}
+
+async function renderHeroCaption() {
+  try {
+    const res = await fetch("/api/promo-banner");
+    if (!res.ok) return;
+    const b = await res.json();
+    if (!b.misEnAvantTitre && !b.misEnAvantTexte) return;
+    document.getElementById("heroCaptionTitre").textContent = b.misEnAvantTitre || "";
+    document.getElementById("heroCaptionTexte").textContent = b.misEnAvantTexte || "";
+    document.getElementById("heroCaption").style.display = "block";
+  } catch (e) { /* légende masquée */ }
+}
+
+function renderPopular() {
+  const list = ALL_PRODUCTS.filter(p => p.enPromotion).slice(0,4);
+  const fallback = ALL_PRODUCTS.slice(0,4);
+  const items = (list.length ? list : fallback).map(productCard).join("");
+  document.getElementById("popularGrid").innerHTML = items || EMPTY_HTML;
+}
+function renderNew() {
+  const list = ALL_PRODUCTS.filter(p => p.estNouveau).slice(0,4);
+  const fallback = ALL_PRODUCTS.slice(0,4);
+  const items = (list.length ? list : fallback).map(productCard).join("");
+  document.getElementById("newGrid").innerHTML = items || EMPTY_HTML;
+}
+function goSearch(value) {
+  if (value.trim().length > 0) window.location.href = `../catalogue/Catalogue.html?q=${encodeURIComponent(value)}`;
+}
+
+async function renderPromoBanner() {
+  try {
+    const res = await fetch("/api/promo-banner");
+    if (!res.ok) return;
+    const b = await res.json();
+    if (!b.actif) return;
+    document.getElementById("promoTitre").textContent = b.titre;
+    document.getElementById("promoSousTitre").textContent = b.sousTitre;
+    document.getElementById("promoBtn").textContent = b.texteBouton;
+    document.getElementById("promoBtn").href = b.lienBouton;
+    document.getElementById("promoSection").style.display = "";
+  } catch (e) { /* bannière masquée */ }
+}
+
+function safe(label, fn) {
+  try { fn(); } catch (e) { console.warn(`[Accueil] "${label}" a échoué :`, e); }
+}
+
+window.addEventListener("DOMContentLoaded", async () => {
+  safe("updateCartBadge", updateCartBadge);
+  safe("updateAuthBtn", updateAuthBtn);
+  try { await loadProducts(); } catch (e) { console.warn("[Accueil] loadProducts a échoué :", e); ALL_PRODUCTS = []; }
+  safe("renderPopular", renderPopular);
+  safe("renderNew", renderNew);
+  safe("initHeroCarousel", initHeroCarousel);
+  safe("renderSiteBackground", renderSiteBackground);
+  safe("renderPromoBanner", renderPromoBanner);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assigamé – Valider ma commande</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../styles/base.css">
+<link rel="stylesheet" href="../../styles/components.css">
+<link rel="stylesheet" href="../../styles/buttons.css">
+<style>
+/* ── Mise en page ── */
+.order-inner { max-width: 700px; margin: 0 auto; padding: 2.5rem 1.5rem; }
+.order-inner h1 { font-size: 2rem; font-weight: 800; color: #2D1B69; margin-bottom: 0.5rem; }
+.order-inner > p.sub { color: #7070A0; margin-bottom: 2rem; }
+
+/* ── Sections ── */
+.order-section { background: #fff; border-radius: 14px; padding: 1.5rem; box-shadow: 0 4px 20px rgba(45,27,105,0.09); margin-bottom: 1.5rem; }
+.order-section h3 { font-size: 1rem; font-weight: 700; color: #2D1B69; margin-bottom: 1.2rem; padding-bottom: 0.75rem; border-bottom: 1px solid #DDD9F5; display: flex; align-items: center; gap: 8px; }
+
+/* ── Paiement ── */
+.payment-options { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; }
+.pay-opt { border: 2px solid #DDD9F5; border-radius: 10px; padding: 1rem; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; }
+.pay-opt.selected { border-color: #2D1B69; background: #F0EEFB; }
+.pay-opt.gated { opacity: 0.85; }
+.pay-opt .pay-icon { margin-bottom: 6px; font-size: 1.4rem; }
+.pay-opt .pay-name { font-size: 0.82rem; font-weight: 600; }
+
+/* ── Récapitulatif ── */
+.order-recap { background: #F0EEFB; border-radius: 10px; padding: 1rem; margin-top: 1rem; }
+.order-recap-line { display: flex; justify-content: space-between; font-size: 0.9rem; padding: 4px 0; }
+.order-recap-line.total { font-weight: 800; color: #2D1B69; font-size: 1.1rem; padding-top: 10px; border-top: 1px solid #DDD9F5; margin-top: 8px; }
+
+/* ── Géolocalisation ── */
+.geo-btn-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
+.btn-geo {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: linear-gradient(135deg, #1E8449, #27AE60);
+  color: #fff; border: none; border-radius: 8px;
+  padding: 0.55rem 1rem; font-size: 0.83rem; font-weight: 600;
+  cursor: pointer; transition: opacity 0.2s, transform 0.15s;
+  white-space: nowrap;
+}
+.btn-geo:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-geo:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.btn-geo .geo-spin { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.4); border-top-color:#fff; border-radius:50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.delivery-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: linear-gradient(135deg, #F0EEFB, #E8E4FA);
+  border: 1px solid #C9C2F0; border-radius: 20px;
+  padding: 0.35rem 0.85rem; font-size: 0.82rem; font-weight: 600;
+  color: #2D1B69; animation: fadeSlideIn 0.4s ease;
+}
+.delivery-badge .badge-dot { width: 8px; height: 8px; background: #27AE60; border-radius: 50%; animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.6; transform:scale(0.85); } }
+@keyframes fadeSlideIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+
+.geo-addr-preview {
+  font-size: 0.82rem; color: #5550A0; background: #F8F7FD;
+  border-radius: 8px; padding: 0.5rem 0.75rem; margin-top: 0.5rem;
+  border-left: 3px solid #7C5CBF; display: none;
+}
+.geo-addr-preview.show { display: block; animation: fadeSlideIn 0.3s ease; }
+
+/* ── Success Box ── */
+.success-overlay {
+  position: fixed; inset: 0;
+  background: rgba(45, 27, 105, 0.45);
+  backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+.success-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 2.5rem 2rem;
+  max-width: 520px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(45,27,105,0.25);
+  animation: slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  text-align: center;
+}
+@keyframes slideUp { from { opacity:0; transform:translateY(40px) scale(0.95); } to { opacity:1; transform:none; } }
+
+.success-card .sc-check {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: linear-gradient(135deg, #1E8449, #27AE60);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 1.25rem; font-size: 2rem; color: #fff;
+  box-shadow: 0 8px 24px rgba(30,132,73,0.35);
+  animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.2s both;
+}
+@keyframes popIn { from { transform:scale(0); } to { transform:scale(1); } }
+
+.success-card h2 { font-size: 1.7rem; font-weight: 800; color: #2D1B69; margin-bottom: 0.4rem; }
+.success-card .sc-ref { font-size: 0.9rem; color: #7070A0; margin-bottom: 1.5rem; }
+.success-card .sc-ref strong { color: #2D1B69; }
+
+.sc-recap {
+  background: #F8F7FD; border-radius: 12px;
+  padding: 1rem 1.25rem; margin-bottom: 1.5rem;
+  text-align: left;
+}
+.sc-recap-title { font-size: 0.78rem; font-weight: 700; color: #7070A0; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; }
+.sc-recap-line { display: flex; justify-content: space-between; align-items: center; font-size: 0.88rem; padding: 3px 0; color: #3A3060; }
+.sc-recap-line .sc-label { color: #7070A0; }
+.sc-recap-line.sc-total { font-weight: 800; color: #2D1B69; font-size: 1rem; margin-top: 8px; padding-top: 8px; border-top: 1px solid #DDD9F5; }
+.sc-qr-box { background: #F8F7FD; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; }
+.sc-qr-title { font-size: 0.78rem; font-weight: 700; color: #7070A0; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; }
+#qrCodeHost { display: flex; justify-content: center; }
+
+.sc-email-note {
+  display: flex; align-items: center; gap: 8px;
+  background: #EFF9F3; border: 1px solid #A9DFBF; border-radius: 8px;
+  padding: 0.6rem 0.9rem; font-size: 0.82rem; color: #1E8449;
+  font-weight: 500; margin-bottom: 1.5rem;
+}
+
+@media (max-width: 480px) { .payment-options { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a class="nav-logo" href="../home/Accueil.html"><i class="fa-solid fa-bag-shopping brand-icon"></i> <span class="brand-my">My</span> <span class="brand-b">B</span> Assigamé</a>
+</nav>
+
+<div class="order-inner" id="orderContent">
+  <div style="text-align:center;padding:3rem;color:#7070A0">Chargement…</div>
+</div>
+
+<!-- SUCCESS OVERLAY (injecté dynamiquement) -->
+<div id="success-overlay" style="display:none"></div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="../../services/api.js"></script>
+<script src="../../services/productService.js"></script>
+<script src="../../services/orderService.js"></script>
+<script src="../../utils/toast.js"></script>
+<script src="../../utils/icons.js"></script>
+<script src="../../utils/featureGate.js"></script>
+<script>
+let ALL_PRODUCTS   = [];
+let selectedPayment = "LIVRAISON";
+let geoCoords      = null;   // { lat, lon } si géoloc autorisée
+
+/* getCart / clearCart / setCart : fournis par utils/toast.js
+   (clé assigame_cart_guest pour les visiteurs — NE PAS redéfinir ici). */
+
+/* ════════════════════════════════════
+   Chargement produits
+   ════════════════════════════════════ */
+async function loadAllProducts() {
+  const { data, error } = await getAllProducts();
+  ALL_PRODUCTS = (!error && Array.isArray(data)) ? data : [];
+}
+
+/* ════════════════════════════════════
+   Rendu du formulaire
+   ════════════════════════════════════ */
+function renderOrderForm() {
+  const cart = getCart();
+  const container = document.getElementById("orderContent");
+
+  if (!cart.length) {
+    container.innerHTML = `<div class="empty-state"><h2 style="color:#2D1B69;margin-bottom:1rem">Votre panier est vide</h2><a class="btn-primary" href="../catalogue/Catalogue.html">Voir les produits</a></div>`;
+    return;
+  }
+
+  let total = 0;
+  const recapLines = cart.map(item => {
+    const p = ALL_PRODUCTS.find(x => Number(x.id) === Number(item.id));
+    if (!p) return "";
+    const lineTotal = p.prix * item.quantite;
+    total += lineTotal;
+    const icon = productIcon(p, "22px");
+    return `<div class="order-recap-line"><span style="display:flex;align-items:center;gap:6px">${icon} ${p.nom} ×${item.quantite}</span><span>${lineTotal.toLocaleString('fr-FR')} FCFA</span></div>`;
+  }).join("");
+
+  const user = getCurrentUser();
+
+  container.innerHTML = `
+    <h1><i class="fa-solid fa-circle-check"></i> Valider ma commande</h1>
+    <p class="sub">Plus qu'une étape pour finaliser votre achat</p>
+
+    <!-- ── Adresse de livraison ── -->
+    <div class="order-section">
+      <h3><i class="fa-solid fa-location-dot"></i> Adresse de livraison</h3>
+
+      <div class="geo-btn-row">
+    <button class="btn-geo" id="btn-geo" onclick="requestGeolocation()">
+          <i class="fa-solid fa-location-crosshairs"></i> Utiliser ma position GPS
+        </button>
+        <span id="delivery-badge" style="display:none"></span>
+      </div>
+      <div class="geo-addr-preview" id="geo-preview"></div>
+
+      <div class="form-group" style="margin-top:0.75rem">
+        <label for="ord-addr">Adresse complète</label>
+        <input class="form-control no-icon" id="ord-addr"
+               placeholder="Ex: Quartier Adidogomé, rue 123, Lomé"
+               value="${user?.adresse || ''}">
+        <div class="field-err" id="ord-addr-err">Adresse requise</div>
+      </div>
+      <div class="form-group">
+        <label for="ord-tel">Numéro de téléphone</label>
+        <input class="form-control no-icon" id="ord-tel"
+               placeholder="+228 90 00 00 00"
+               value="${user?.telephone || ''}">
+        <div class="field-err" id="ord-tel-err">Numéro requis</div>
+      </div>
+    </div>
+
+    <!-- ── Mode de paiement ── -->
+    <div class="order-section">
+      <h3><i class="fa-solid fa-credit-card"></i> Mode de paiement</h3>
+      <div class="payment-options">
+        <div class="pay-opt gated" id="pay-MOBILE_MONEY" onclick="selectPay('MOBILE_MONEY',event)">
+          <div class="pay-icon"><i class="fa-solid fa-mobile-screen"></i></div>
+          <div class="pay-name">Mobile Money</div>
+        </div>
+        <div class="pay-opt gated" id="pay-CARTE" onclick="selectPay('CARTE',event)">
+          <div class="pay-icon"><i class="fa-solid fa-credit-card"></i></div>
+          <div class="pay-name">Carte bancaire</div>
+        </div>
+        <div class="pay-opt selected" id="pay-LIVRAISON" onclick="selectPay('LIVRAISON',event)">
+          <div class="pay-icon"><i class="fa-solid fa-truck"></i></div>
+          <div class="pay-name">Paiement à la livraison</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Récapitulatif ── -->
+    <div class="order-section">
+      <h3><i class="fa-solid fa-receipt"></i> Récapitulatif</h3>
+      <div class="order-recap">
+        ${recapLines}
+        <div class="order-recap-line total"><span>Total</span><span>${total.toLocaleString('fr-FR')} FCFA</span></div>
+      </div>
+    </div>
+
+    <button class="btn-full" id="btn-confirm" onclick="placeOrder()">
+      <i class="fa-solid fa-check"></i> Confirmer ma commande
+    </button>
+  `;
+}
+
+/* ════════════════════════════════════
+   Sélection du paiement
+   ════════════════════════════════════ */
+function selectPay(type, event) {
+  if (isGatedPayment(type)) return showComingSoon(event);
+  selectedPayment = type;
+  ["MOBILE_MONEY","CARTE","LIVRAISON"].forEach(t => {
+    document.getElementById("pay-"+t)?.classList.toggle("selected", t === type);
+  });
+}
+
+/* ════════════════════════════════════
+   📍 GÉOLOCALISATION GPS
+   → Fonctionnalité disponible dans la prochaine version
+   ════════════════════════════════════ */
+function requestGeolocation() {
+  showComingSoonModal('Géolocalisation GPS & estimation de livraison');
+}
+
+/* ════════════════════════════════════
+   Passage de commande
+   ════════════════════════════════════ */
+async function placeOrder() {
+  if (isGatedPayment(selectedPayment)) return showComingSoon();
+
+  const addr = document.getElementById("ord-addr").value.trim();
+  const tel  = document.getElementById("ord-tel").value.trim();
+  let valid = true;
+  if (!addr) { document.getElementById("ord-addr-err").classList.add("show"); valid = false; }
+  else document.getElementById("ord-addr-err").classList.remove("show");
+  if (!tel)  { document.getElementById("ord-tel-err").classList.add("show"); valid = false; }
+  else document.getElementById("ord-tel-err").classList.remove("show");
+  if (!valid) return;
+
+  const cart  = getCart();
+  const items = cart.map(i => ({ produitId: i.id, quantite: i.quantite }));
+  const total = cart.reduce((sum, item) => {
+    const p = ALL_PRODUCTS.find(x => Number(x.id) === Number(item.id));
+    return sum + (p ? p.prix * item.quantite : 0);
+  }, 0);
+
+  const payload = {
+    adresseLivraison: addr,
+    telephone: tel,
+    modePaiement: selectedPayment,
+    items,
+    montantTotal: total,
+    ...(geoCoords ? { coordonnees: geoCoords } : {}),
+  };
+
+  const btn = document.getElementById("btn-confirm");
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner"></span> Traitement en cours…`;
+
+  const { data, error } = await createOrder(payload);
+  let reference, codeLivraison = null;
+
+  if (error === "NETWORK_ERROR") {
+    reference = "#" + Math.floor(1000 + Math.random() * 9000);
+    showToast("Commande enregistrée en mode démo (serveur hors ligne)", "warning");
+  } else if (error) {
+    showToast(error, "error");
+    btn.disabled = false;
+    btn.innerHTML = `<i class="fa-solid fa-check"></i> Confirmer ma commande`;
+    return;
+  } else {
+    reference = data.reference || data.id;
+    codeLivraison = data.codeLivraison || null;
+  }
+
+  clearCart();
+
+  /* On garde une trace locale (référence + code de livraison) pour que
+     les visiteurs sans compte puissent retrouver leur commande plus tard
+     via la section "Mes commandes" en bas du panier. */
+  if (!getCurrentUser()) {
+    saveGuestOrder({ reference, codeLivraison, total, date: new Date().toISOString() });
+  }
+
+  /* L'envoi d'email de confirmation nécessite un service d'envoi externe
+     (SMTP / SendGrid / etc.) — fonctionnalité prévue pour une prochaine
+     version, pas d'appel réseau réel ici. */
+  const emailSent = false;
+  const userEmail = getCurrentUser()?.email || "";
+
+  // Construire le récap pour la modal success
+  const recapLines = cart.map(item => {
+    const p = ALL_PRODUCTS.find(x => Number(x.id) === Number(item.id));
+    if (!p) return "";
+    const lineTotal = p.prix * item.quantite;
+    return `<div class="sc-recap-line"><span>${p.emoji || "📦"} ${p.nom} ×${item.quantite}</span><span>${lineTotal.toLocaleString('fr-FR')} FCFA</span></div>`;
+  }).join("");
+
+  showSuccessOverlay({ reference, addr, tel, total, cart, recapLines, emailSent, userEmail, codeLivraison });
+}
+
+/* ════════════════════════════════════
+   SUCCESS OVERLAY — style modal
+   ════════════════════════════════════ */
+function showSuccessOverlay({ reference, addr, tel, total, cart, recapLines, emailSent, codeLivraison }) {
+  const user = getCurrentUser();
+  const userEmail = user?.email || "";
+
+  const emailNote = emailSent
+    ? `<div class="sc-email-note"><i class="fa-solid fa-envelope-circle-check"></i> Email de confirmation envoyé à <strong>${userEmail}</strong></div>`
+    : (userEmail
+        ? `<div class="sc-email-note" style="background:#FFF9E6;border-color:#F5CBA7;color:#D68910"><i class="fa-solid fa-envelope"></i> Email de confirmation en attente d'envoi</div>`
+        : "");
+
+  document.getElementById("success-overlay").style.display = "flex";
+  document.getElementById("success-overlay").innerHTML = `
+    <div class="success-overlay">
+      <div class="success-card">
+        <div class="sc-check"><i class="fa-solid fa-check"></i></div>
+        <h2>Commande confirmée !</h2>
+        <p class="sc-ref">Référence : <strong>${reference}</strong></p>
+
+        ${emailNote}
+
+        <div class="sc-recap">
+          <div class="sc-recap-title">Récapitulatif</div>
+          ${recapLines}
+          <div class="sc-recap-line sc-total"><span>Total</span><span>${total.toLocaleString('fr-FR')} FCFA</span></div>
+          <div class="sc-recap-line" style="margin-top:10px;padding-top:8px;border-top:1px solid #DDD9F5">
+            <span class="sc-label"><i class="fa-solid fa-location-dot"></i> Livraison</span>
+            <span style="font-size:0.82rem;text-align:right;max-width:60%">${addr}</span>
+          </div>
+          <div class="sc-recap-line">
+            <span class="sc-label"><i class="fa-solid fa-phone"></i> Téléphone</span>
+            <span>${tel}</span>
+          </div>
+          <div class="sc-recap-line">
+            <span class="sc-label"><i class="fa-solid fa-credit-card"></i> Paiement</span>
+            <span>À la livraison</span>
+          </div>
+        </div>
+
+        <p style="font-size:0.85rem;color:#7070A0;margin-bottom:1.5rem">
+          Vous serez contacté(e) pour confirmer la livraison. Merci de votre confiance !
+        </p>
+
+        ${codeLivraison ? `
+        <div class="sc-qr-box">
+          <div class="sc-qr-title"><i class="fa-solid fa-qrcode"></i> Code de livraison</div>
+          <div id="qrCodeHost"></div>
+          <p style="font-size:0.78rem;color:#7070A0;margin-top:8px">
+            Montrez ce code au livreur au moment de la remise du colis — c'est ce qui confirme
+            officiellement que vous avez bien reçu votre commande.
+          </p>
+        </div>` : ""}
+
+        <a class="btn-primary" href="../home/Accueil.html"
+           style="display:inline-block;text-decoration:none;width:100%;text-align:center">
+          Retour à l'accueil
+        </a>
+      </div>
+    </div>
+  `;
+
+  if (codeLivraison && window.QRCode) {
+    new QRCode(document.getElementById("qrCodeHost"), { text: codeLivraison, width: 160, height: 160 });
+  }
+}
+
+/* ════════════════════════════════════
+   Init
+   ════════════════════════════════════ */
+window.addEventListener("DOMContentLoaded", async () => {
+  await loadAllProducts();
+  renderOrderForm();
+});
+</script>
+</body>
+</html>

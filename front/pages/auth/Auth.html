@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assigamé – Connexion</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../styles/base.css">
+<link rel="stylesheet" href="../../styles/components.css">
+<link rel="stylesheet" href="../../styles/buttons.css">
+<style>
+body { display: flex; align-items: center; justify-content: center; padding: 1.5rem; position: relative; overflow: hidden; min-height: 100vh; }
+
+/* ── Fond : carrousel plein écran des régions du Togo ── */
+.region-bg-slide {
+  position: fixed; inset: 0; background-size: cover; background-position: center;
+  opacity: 0; transition: opacity 1.5s ease-in-out; z-index: -2;
+}
+.region-bg-slide.active { opacity: 1; }
+.region-bg-overlay { position: fixed; inset: 0; background: rgba(26,10,64,0.68); z-index: -1; }
+
+.auth-card { background: #FFFFFF; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.35); width: 100%; max-width: 440px; overflow: hidden; position: relative; z-index: 1; }
+
+.auth-header { background: linear-gradient(135deg, #2D1B69 0%, #4A30A0 100%); padding: 2rem 2rem 1.5rem; text-align: center; }
+.auth-logo { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 1.8rem; color: #fff; letter-spacing: -0.02em; }
+.auth-logo span { color: #F5A623; }
+.auth-tagline { color: rgba(255,255,255,0.6); font-size: 0.82rem; margin-top: 4px; }
+
+.auth-tabs { display: flex; border-bottom: 2px solid #DDD9F5; background: #FAFAFE; }
+.panel        { display: none; }
+.panel.active { display: block; }
+.auth-body    { padding: 1.75rem 2rem 2rem; max-height: 72vh; overflow-y: auto; }
+.panel-title  { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 1.3rem; color: #2D1B69; margin-bottom: 0.2rem; }
+.panel-sub    { color: #7070A0; font-size: 0.84rem; margin-bottom: 1.5rem; }
+
+.check-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 1rem; font-size: 0.82rem; color: #7070A0; }
+.check-row input { accent-color: #2D1B69; margin-top: 2px; cursor: pointer; flex-shrink: 0; }
+.check-row a { color: #2D1B69; font-weight: 600; }
+.check-row a:hover { text-decoration: underline; }
+
+.switch-link { text-align: center; font-size: 0.83rem; color: #7070A0; }
+.switch-link a { color: #2D1B69; font-weight: 700; cursor: pointer; text-decoration: none; }
+.switch-link a:hover { text-decoration: underline; }
+
+@media (max-width: 480px) { .auth-body { padding: 1.5rem; } }
+</style>
+</head>
+<body>
+
+<!-- Carrousel plein écran : régions du Togo. Les images viennent du
+     serveur (dossier back "regions") — en ajouter une là-bas suffit,
+     rien à changer ici. Voir loadImageFolderCarousel() dans utils/icons.js -->
+<div id="regionBg"></div>
+<div class="region-bg-overlay"></div>
+
+<div class="auth-card">
+  <div class="auth-header">
+    <div class="auth-logo"><i class="fa-solid fa-bag-shopping brand-icon"></i> <span class="brand-my">My</span> <span class="brand-b">B</span> Assigamé</div>
+    <div class="auth-tagline">Votre marché en ligne de confiance au Togo</div>
+  </div>
+
+  <div class="auth-tabs">
+    <button class="auth-tab active" id="tab-login"    onclick="switchTab('login')">Connexion</button>
+    <button class="auth-tab"        id="tab-register" onclick="switchTab('register')">Inscription</button>
+  </div>
+
+  <div class="auth-body">
+
+    <!-- ═══ CONNEXION ═══ -->
+    <div class="panel active" id="panel-login">
+      <div class="panel-title">Bon retour <i class="fa-solid fa-hand"></i></div>
+      <div class="panel-sub">Connectez-vous à votre compte</div>
+
+      <div class="form-group">
+        <label for="l-email">Adresse email</label>
+        <div class="input-wrap"><span class="input-ico"><i class="fa-solid fa-envelope"></i></span>
+          <input class="form-control" type="email" id="l-email" placeholder="vous@example.com"
+                 oninput="clearFieldError('l-email-err')" onkeydown="if(event.key==='Enter') doLogin()">
+        </div>
+        <div class="field-err" id="l-email-err">Adresse email invalide</div>
+      </div>
+
+      <div class="form-group">
+        <label for="l-pwd">Mot de passe</label>
+        <div class="input-wrap"><span class="input-ico"><i class="fa-solid fa-key"></i></span>
+          <input class="form-control" type="password" id="l-pwd" placeholder="••••••••"
+                 oninput="clearFieldError('l-pwd-err')" onkeydown="if(event.key==='Enter') doLogin()">
+          <button class="eye-btn" type="button" onclick="togglePwd('l-pwd',this)"><i class="fa-solid fa-eye"></i></button>
+        </div>
+        <div class="field-err" id="l-pwd-err">Mot de passe requis</div>
+      </div>
+
+      <div class="check-row"><input type="checkbox" id="remember"><label for="remember">Se souvenir de moi</label></div>
+
+      <button class="btn-full" id="btn-login" onclick="doLogin()">Se connecter</button>
+
+      <div class="divider"><span>ou</span></div>
+      <div class="switch-link">Pas encore de compte ? <a href="?tab=register" onclick="switchTab('register');return false;">Créer un compte</a></div>
+    </div>
+
+    <!-- ═══ INSCRIPTION ═══ -->
+    <div class="panel" id="panel-register">
+      <div class="panel-title">Créer un compte</div>
+      <div class="panel-sub">Rejoignez Assigamé en quelques secondes</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="r-nom">Nom</label>
+          <div class="input-wrap"><span class="input-ico"><i class="fa-solid fa-user"></i></span>
+            <input class="form-control" id="r-nom" placeholder="Doe" oninput="clearFieldError('r-nom-err')">
+          </div>
+          <div class="field-err" id="r-nom-err">Requis</div>
+        </div>
+        <div class="form-group">
+          <label for="r-prenom">Prénom</label>
+          <div class="input-wrap"><span class="input-ico"><i class="fa-solid fa-user"></i></span>
+            <input class="form-control" id="r-prenom" placeholder="John" oninput="clearFieldError('r-prenom-err')">
+          </div>
+          <div class="field-err" id="r-prenom-err">Requis</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="r-email">Adresse email</label>
+        <div class="input-wrap"><span class="input-ico"><i class="fa-solid fa-envelope"></i></span>
+          <input class="form-control" type="email" id="r-email" placeholder="vous@example.com" oninput="clearFieldError('r-email-err')">
+        </div>
+        <div class="field-err" id="r-email-err">Email invalide</div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="r-tel">Téléphone</label>
+          <div class="input-wrap"><span class="input-ico"><i class="fa-solid fa-phone"></i></span>
+            <input class="form-control" id="r-tel" placeholder="+228 90 00 00 00" oninput="clearFieldError('r-tel-err')">
+          </div>
+          <div class="field-err" id="r-tel-err">Numéro invalide</div>
+        </div>
+        <div class="form-group">
+          <label for="r-region">Région</label>
+          <div class="input-wrap"><span class="input-ico"><i class="fa-solid fa-map-location-dot"></i></span>
+            <select class="form-control" id="r-region" style="padding-left:36px" onchange="setRegionBg(this.value)">
+              <option value="Maritime">Maritime</option>
+              <option value="Plateaux">Plateaux</option>
+              <option value="Centrale">Centrale</option>
+              <option value="Kara">Kara</option>
+              <option value="Savanes">Savanes</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="r-pwd">Mot de passe</label>
+        <div class="input-wrap"><span class="input-ico"><i class="fa-solid fa-key"></i></span>
+          <input class="form-control" type="password" id="r-pwd" placeholder="Min. 8 caractères"
+                 oninput="updateStrengthBar('r-strength-bar','r-strength-lbl',this.value); clearFieldError('r-pwd-err')"
+                 onkeydown="if(event.key==='Enter') doRegister()">
+          <button class="eye-btn" type="button" onclick="togglePwd('r-pwd',this)"><i class="fa-solid fa-eye"></i></button>
+        </div>
+        <div class="field-err" id="r-pwd-err">Min. 8 caractères</div>
+        <div class="strength-bar" id="r-strength-bar"></div>
+        <div class="strength-label" id="r-strength-lbl"></div>
+      </div>
+
+      <div class="check-row">
+        <input type="checkbox" id="terms">
+        <label for="terms">J'accepte les <a href="#">Conditions d'utilisation</a> et la <a href="#">Politique de confidentialité</a></label>
+      </div>
+
+      <!-- Note : pas de choix de rôle ici — tout nouveau compte est CLIENT.
+           "Devenir vendeur" se fait ensuite depuis la page Profil. -->
+      <button class="btn-full" id="btn-register" onclick="doRegister()">Créer mon compte</button>
+
+      <div class="divider"><span>ou</span></div>
+      <div class="switch-link">Déjà inscrit ? <a href="?tab=login" onclick="switchTab('login');return false;">Se connecter</a></div>
+    </div>
+
+  </div>
+</div>
+
+<script src="../../services/api.js"></script>
+<script src="../../services/authService.js"></script>
+<script src="../../utils/toast.js"></script>
+<script src="../../utils/icons.js"></script>
+<script>
+function switchTab(tab) {
+  document.querySelectorAll(".auth-tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+  document.getElementById(`tab-${tab}`).classList.add("active");
+  document.getElementById(`panel-${tab}`).classList.add("active");
+}
+
+function redirectByRole(role) {
+  /* Priorité : revenir exactement là où on était avant de venir se
+     connecter (ex. clic sur un produit) plutôt qu'une destination fixe. */
+  const returnTo = new URLSearchParams(window.location.search).get("return");
+  if (returnTo) { window.location.href = returnTo; return; }
+  if (role === "ADMIN") window.location.href = "../admin/Dashboard.html";
+  else if (role === "LIVREUR") window.location.href = "../livreur/DashboardLivreur.html";
+  else window.location.href = "../profil/Profil.html";
+}
+
+/* Si déjà connecté, inutile de revoir ce formulaire : direction Profil/Dashboard.
+   C'est ce qui manquait avant — visiter Auth.html en étant connecté rechargeait
+   le formulaire de connexion au lieu de renvoyer vers le profil. */
+window.addEventListener("DOMContentLoaded", async () => {
+  const user = getCurrentUser();
+  if (user) { redirectByRole(user.role); return; }
+
+  const tab = new URLSearchParams(window.location.search).get("tab");
+  if (tab === "register") switchTab("register");
+  await initRegionCarousel();
+});
+
+function setBtnLoading(btnId, loading, label) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = loading;
+  btn.innerHTML = loading ? `<span class="spinner"></span>${label}` : label;
+}
+
+async function doLogin() {
+  const email = document.getElementById("l-email").value.trim();
+  const pwd   = document.getElementById("l-pwd").value;
+  let valid = true;
+  if (!isValidEmail(email)) { showFieldError("l-email-err", "Adresse email invalide"); valid = false; }
+  if (!pwd)                  { showFieldError("l-pwd-err",   "Mot de passe requis");    valid = false; }
+  if (!valid) return;
+
+  setBtnLoading("btn-login", true, "Connexion…");
+  const { user, error, offline } = await login(email, pwd);
+  setBtnLoading("btn-login", false, "Se connecter");
+
+  if (error) { showToast(error === "NETWORK_ERROR" ? "Serveur indisponible" : error, "error"); return; }
+  if (offline) showToast("Mode hors ligne — données locales", "warning");
+  else         showToast(`Bienvenue ${user.prenom} !`, "success");
+  setTimeout(() => redirectByRole(user.role), 900);
+}
+
+async function doRegister() {
+  const nom    = document.getElementById("r-nom").value.trim();
+  const prenom = document.getElementById("r-prenom").value.trim();
+  const email  = document.getElementById("r-email").value.trim();
+  const tel    = document.getElementById("r-tel").value.trim();
+  const region = document.getElementById("r-region").value;
+  const pwd    = document.getElementById("r-pwd").value;
+  const terms  = document.getElementById("terms").checked;
+
+  let valid = true;
+  if (!nom)                { showFieldError("r-nom-err",    "Nom requis");             valid = false; }
+  if (!prenom)             { showFieldError("r-prenom-err", "Prénom requis");          valid = false; }
+  if (!isValidEmail(email)){ showFieldError("r-email-err",  "Email invalide");         valid = false; }
+  if (!isValidPhone(tel))  { showFieldError("r-tel-err",    "Numéro invalide");        valid = false; }
+  if (pwd.length < 8)      { showFieldError("r-pwd-err",    "Min. 8 caractères");      valid = false; }
+  if (!terms)               { showToast("Veuillez accepter les conditions", "warning"); valid = false; }
+  if (!valid) return;
+
+  setBtnLoading("btn-register", true, "Création du compte…");
+  const { user, error, offline } = await register(nom, prenom, email, tel, pwd, region);
+  setBtnLoading("btn-register", false, "Créer mon compte");
+
+  if (error) { showToast(error === "NETWORK_ERROR" ? "Serveur indisponible" : error, "error"); return; }
+  if (offline) showToast("Compte créé (mode hors ligne)", "warning");
+  else         showToast("Compte créé avec succès !", "success");
+  setTimeout(() => { window.location.href = "../profil/Profil.html"; }, 900);
+}
+
+/* ── Carrousel de fond : régions du Togo ──
+   Les images viennent du serveur (dossier "regions" — voir ImagesController
+   et loadImageFolderCarousel dans utils/icons.js) : en ajouter une là-bas
+   suffit, aucun code à toucher ici. Le carrousel défile automatiquement, et
+   se cale aussi sur la région choisie dans le formulaire d'inscription. */
+let REGION_URLS = [];
+async function initRegionCarousel() {
+  REGION_URLS = await loadImageFolderCarousel("regions", "regionBg", "region-bg-slide", 5000);
+}
+function setRegionBg(regionName) {
+  if (!REGION_URLS.length) return;
+  const needle = regionName.toLowerCase();
+  const idx = REGION_URLS.findIndex(u => {
+    const file = u.split("/").pop().toLowerCase();
+    return file.includes(needle) || needle.includes(file.replace(/\.[a-z]+$/, ""));
+  });
+  if (idx === -1) return;
+  document.querySelectorAll(".region-bg-slide").forEach((el, i) => el.classList.toggle("active", i === idx));
+}
+</script>
+</body>
+</html>

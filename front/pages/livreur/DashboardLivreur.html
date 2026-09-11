@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assigamé – Espace Livreur</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../styles/base.css">
+<link rel="stylesheet" href="../../styles/components.css">
+<link rel="stylesheet" href="../../styles/buttons.css">
+<style>
+.topbar { background: linear-gradient(135deg, #1E8449 0%, #196F3D 100%); }
+.livreur-wrap { max-width: 720px; margin: 0 auto; padding: 2rem 1.5rem; }
+.livreur-title { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 1.5rem; color: #1A1A2E; margin-bottom: 0.3rem; }
+.livreur-sub { color: #7070A0; font-size: 0.9rem; margin-bottom: 1.5rem; }
+
+.btn-scan {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; background: #1E8449; color: #fff; border: none; border-radius: 14px;
+  padding: 1.1rem; font-size: 1rem; font-weight: 700; font-family: 'Sora', sans-serif;
+  cursor: pointer; margin-bottom: 2rem; box-shadow: 0 8px 24px rgba(30,132,73,0.3);
+  transition: transform 0.15s;
+}
+.btn-scan:hover { transform: translateY(-1px); }
+.btn-scan i { font-size: 1.3rem; }
+
+.delivery-card {
+  background: #fff; border-radius: 14px; padding: 1.2rem 1.4rem; margin-bottom: 1rem;
+  box-shadow: 0 4px 20px rgba(45,27,105,0.08); display: flex; flex-direction: column; gap: 6px;
+}
+.delivery-card .dc-top { display: flex; justify-content: space-between; align-items: center; }
+.delivery-card .dc-ref { font-family: 'Sora', sans-serif; font-weight: 800; color: #2D1B69; }
+.delivery-card .dc-badge { background: #FFF3CD; color: #8a5500; font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+.delivery-card .dc-row { display: flex; align-items: center; gap: 8px; color: #4A4A6A; font-size: 0.88rem; }
+.delivery-card .dc-row i { color: #1E8449; width: 16px; }
+.delivery-card .dc-total { margin-top: 6px; font-weight: 700; color: #2D1B69; }
+
+/* ── Modal scan caméra ── */
+.scan-modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(26,10,64,0.85); z-index: 999;
+  align-items: center; justify-content: center; padding: 1.5rem;
+}
+.scan-modal-overlay.open { display: flex; }
+.scan-modal-box {
+  background: #fff; border-radius: 18px; padding: 1.5rem; width: 100%; max-width: 420px;
+  text-align: center;
+}
+.scan-video-wrap { position: relative; border-radius: 12px; overflow: hidden; background: #000; margin-bottom: 1rem; aspect-ratio: 1; }
+.scan-video-wrap video { width: 100%; height: 100%; object-fit: cover; }
+.scan-frame { position: absolute; inset: 15%; border: 3px solid #F5A623; border-radius: 12px; pointer-events: none; }
+.scan-status { font-size: 0.85rem; color: #7070A0; margin-bottom: 1rem; min-height: 20px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="topbar-logo" href="../home/Accueil.html"><i class="fa-solid fa-bag-shopping brand-icon"></i> <span class="brand-my">My</span> <span class="brand-b">B</span> Assigamé</a>
+  <div class="topbar-right">
+    <a class="btn-topbar" href="../messagerie/Messagerie.html"><i class="fa-solid fa-comment-dots"></i> Messages</a>
+    <span style="color:rgba(255,255,255,0.85);font-size:0.85rem" id="livreurNomTop"></span>
+    <button class="btn-logout-light" onclick="doLogout()">Déconnexion</button>
+  </div>
+</div>
+
+<div class="livreur-wrap">
+  <div class="livreur-title"><i class="fa-solid fa-truck-fast"></i> Mes livraisons</div>
+  <div class="livreur-sub">Scannez le QR code remis au client pour confirmer chaque livraison.</div>
+
+  <button class="btn-scan" onclick="openScanModal()"><i class="fa-solid fa-qrcode"></i> Scanner une livraison</button>
+  <button class="btn-secondary" id="contactVendeurBtn" style="width:100%;margin-bottom:2rem;display:none" onclick="contacterMonVendeur()"><i class="fa-solid fa-comment-dots"></i> Contacter vendeur</button>
+
+  <div id="deliveriesList"><div class="empty-state"><span class="empty-icon"><i class="fa-solid fa-spinner fa-spin"></i></span><p>Chargement…</p></div></div>
+</div>
+
+<!-- ═══ Modal scan caméra ═══ -->
+<div class="scan-modal-overlay" id="scanModal">
+  <div class="scan-modal-box">
+    <h3 style="font-family:'Sora',sans-serif;margin-bottom:1rem">Scanner le QR code du client</h3>
+    <div class="scan-video-wrap">
+      <video id="scanVideo" autoplay playsinline muted></video>
+      <div class="scan-frame"></div>
+    </div>
+    <canvas id="scanCanvas" style="display:none"></canvas>
+    <div class="scan-status" id="scanStatus">Autorisez la caméra pour commencer…</div>
+    <button class="btn-cancel" style="width:100%" onclick="closeScanModal()">Fermer</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.js"></script>
+<script src="../../services/api.js"></script>
+<script src="../../services/authService.js"></script>
+<script src="../../services/orderService.js"></script>
+<script src="../../services/messageService.js"></script>
+<script src="../../utils/toast.js"></script>
+<script>
+window.addEventListener("DOMContentLoaded", async () => {
+  const user = getCurrentUser();
+  if (!user) { window.location.href = "../auth/Auth.html?return=" + encodeURIComponent(window.location.href); return; }
+  if (user.role !== "LIVREUR") { showToast("Accès réservé aux livreurs", "error"); setTimeout(() => window.location.href = "../profil/Profil.html", 1200); return; }
+  document.getElementById("livreurNomTop").textContent = `${user.prenom} ${user.nom}`;
+  if (user.vendeurProprietaireId) {
+    const btn = document.getElementById("contactVendeurBtn");
+    btn.style.display = "";
+    btn.dataset.vendeurId = user.vendeurProprietaireId;
+  }
+  await loadDeliveries();
+});
+async function contacterMonVendeur() {
+  const vendeurId = document.getElementById("contactVendeurBtn").dataset.vendeurId;
+  if (!vendeurId) return;
+  const { data, error } = await demarrerConversation({ autreUtilisateurId: parseInt(vendeurId) });
+  if (error) { showToast(error, "error"); return; }
+  window.location.href = `../messagerie/Messagerie.html?conv=${data.id}`;
+}
+
+async function loadDeliveries() {
+  const list = document.getElementById("deliveriesList");
+  const { data, error } = await getMesLivraisons();
+  if (error) { list.innerHTML = `<div class="empty-state"><p>Impossible de charger vos livraisons.</p></div>`; return; }
+  if (!data.length) {
+    list.innerHTML = `<div class="empty-state"><span class="empty-icon"><i class="fa-solid fa-circle-check"></i></span><h3>Aucune livraison en attente</h3><p>Les commandes que votre vendeur vous assigne apparaîtront ici.</p></div>`;
+    return;
+  }
+  list.innerHTML = data.map(o => `
+    <div class="delivery-card">
+      <div class="dc-top"><span class="dc-ref">${o.reference}</span><span class="dc-badge">À livrer</span></div>
+      <div class="dc-row"><i class="fa-solid fa-user"></i> ${o.clientNom || "Client"}</div>
+      <div class="dc-row"><i class="fa-solid fa-location-dot"></i> ${o.adresseLivraison || "Adresse non précisée"}</div>
+      <div class="dc-row"><i class="fa-solid fa-phone"></i> ${o.telephone || "—"}</div>
+      <div class="dc-total">${(o.montantTotal||0).toLocaleString('fr-FR')} FCFA${o.modePaiement === "LIVRAISON" ? " · à encaisser à la livraison" : ""}</div>
+    </div>`).join("");
+}
+
+/* ── Scan QR (caméra + jsQR, entièrement côté client) ── */
+let scanStream = null;
+let scanLoopActive = false;
+
+async function openScanModal() {
+  document.getElementById("scanModal").classList.add("open");
+  document.getElementById("scanStatus").textContent = "Autorisez la caméra pour commencer…";
+  try {
+    scanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    const video = document.getElementById("scanVideo");
+    video.srcObject = scanStream;
+    scanLoopActive = true;
+    document.getElementById("scanStatus").textContent = "Visez le QR code du client…";
+    requestAnimationFrame(scanLoop);
+  } catch (e) {
+    document.getElementById("scanStatus").textContent = "Caméra inaccessible — vérifiez les autorisations du navigateur.";
+  }
+}
+function closeScanModal() {
+  scanLoopActive = false;
+  if (scanStream) { scanStream.getTracks().forEach(t => t.stop()); scanStream = null; }
+  document.getElementById("scanModal").classList.remove("open");
+}
+function scanLoop() {
+  if (!scanLoopActive) return;
+  const video = document.getElementById("scanVideo");
+  const canvas = document.getElementById("scanCanvas");
+  if (video.readyState === video.HAVE_ENOUGH_DATA) {
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imageData.data, imageData.width, imageData.height);
+    if (code && code.data) {
+      scanLoopActive = false;
+      handleScannedCode(code.data);
+      return;
+    }
+  }
+  requestAnimationFrame(scanLoop);
+}
+async function handleScannedCode(codeLivraison) {
+  document.getElementById("scanStatus").textContent = "Vérification…";
+  const { data, error } = await scannerLivraison(codeLivraison);
+  if (error) {
+    showToast(error, "error");
+    document.getElementById("scanStatus").textContent = "Code non reconnu — réessayez.";
+    scanLoopActive = true;
+    requestAnimationFrame(scanLoop);
+    return;
+  }
+  showToast(`Livraison ${data.reference} confirmée ✓`, "success");
+  closeScanModal();
+  loadDeliveries();
+}
+</script>
+</body>
+</html>

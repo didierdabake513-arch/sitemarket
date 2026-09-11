@@ -1,0 +1,177 @@
+
+/* =============================================================
+   styles/buttons.css
+   TOUS LES BOUTONS DU PROJET — commentés par page et usage
+   Aucune variable CSS (:root)
+   ============================================================= */
+
+/* ── Bouton primaire violet ──
+   Utilisé : Accueil (CTA hero), Catalogue, Auth, Profil, Admin, Vendeur */
+.btn-primary {
+  background: #2D1B69; color: #fff; border: none; border-radius: 8px;
+  padding: 11px 24px; font-family: 'Sora', sans-serif; font-size: 0.9rem; font-weight: 700;
+  cursor: pointer; transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  white-space: nowrap; text-decoration: none; display: inline-block;
+}
+.btn-primary:hover    { background: #4A30A0; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(45,27,105,0.25); }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+/* ── Bouton pleine largeur ──
+   Utilisé : Auth.html (Se connecter / Créer compte), Commande.html (Confirmer) */
+.btn-full {
+  width: 100%; padding: 12px; background: #2D1B69; color: #fff; border: none; border-radius: 8px;
+  font-family: 'Sora', sans-serif; font-size: 0.95rem; font-weight: 700; cursor: pointer;
+  transition: background 0.2s, transform 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-full:hover    { background: #4A30A0; transform: translateY(-1px); }
+.btn-full:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
+
+/* ── Bouton secondaire (contour) ──
+   Utilisé : Accueil (CTA secondaire), Panier (continuer les achats) */
+.btn-secondary {
+  background: transparent; border: 2px solid #DDD9F5; color: #2D1B69;
+  border-radius: 30px; padding: 12px 28px; font-weight: 600; cursor: pointer; font-size: 1rem;
+  transition: border-color 0.2s; font-family: 'Sora', sans-serif; text-decoration: none; display: inline-block;
+}
+.btn-secondary:hover { border-color: #2D1B69; }
+
+/* ── Bouton or (accent) ──
+   Utilisé : Produit.html "Commander maintenant", Promo Accueil */
+.btn-gold {
+  background: #F5A623; color: #2D1B69; border: none; border-radius: 8px;
+  padding: 11px 24px; font-family: 'Sora', sans-serif; font-size: 0.9rem; font-weight: 700;
+  cursor: pointer; transition: background 0.2s, transform 0.15s; text-decoration: none; display: inline-block;
+}
+.btn-gold:hover { background: #FFC85A; transform: translateY(-1px); }
+
+/* ── Bouton danger ──
+   Utilisé : Profil (Supprimer mon compte), Admin (Supprimer produit/user) */
+.btn-danger {
+  background: #FEE; color: #E74C3C; border: 2px solid #FCC; border-radius: 8px;
+  padding: 9px 18px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.2s;
+}
+.btn-danger:hover { background: #FDD; }
+
+/* ── Bouton annuler ──
+   Utilisé : Modal produit (Admin, Vendeur) */
+.btn-cancel {
+  flex: 1; background: #F2F0FB; border: 2px solid #DDD9F5; color: #7070A0;
+  border-radius: 8px; padding: 10px; cursor: pointer; font-weight: 600; transition: border-color 0.2s, color 0.2s;
+}
+.btn-cancel:hover { border-color: #2D1B69; color: #2D1B69; }
+
+/* ── Bouton déconnexion ──
+   Utilisé : Profil topbar, sidebar Admin/Vendeur */
+.btn-logout {
+  background: rgba(231,76,60,0.2); border: 1px solid rgba(231,76,60,0.35);
+  color: rgba(255,255,255,0.8); border-radius: 8px; padding: 6px 10px; cursor: pointer;
+  font-size: 0.85rem; transition: background 0.2s;
+}
+.btn-logout:hover { background: rgba(231,76,60,0.5); color: #fff; }
+/* Variante topbar publique (fond clair derrière) */
+.btn-logout-light {
+  background: rgba(231,76,60,0.25); border: 1px solid rgba(231,76,60,0.4);
+  color: rgba(255,255,255,0.85); border-radius: 20px; padding: 7px 16px;
+  font-size: 0.83rem; cursor: pointer; transition: background 0.2s;
+}
+.btn-logout-light:hover { background: rgba(231,76,60,0.5); color: #fff; }
+
+/* ── Bouton topbar (Panier dans Profil/Vendeur/Admin) ──
+   Utilisé : Profil.html topbar */
+.btn-topbar {
+  background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+  color: #fff; border-radius: 20px; padding: 7px 16px; font-size: 0.83rem;
+  cursor: pointer; font-family: 'Inter', sans-serif; transition: background 0.2s;
+  text-decoration: none; display: inline-block;
+}
+.btn-topbar:hover { background: rgba(255,255,255,0.22); }
+
+/* ── Boutons icône (tableaux) ──
+   Utilisés : Admin produits/utilisateurs, Vendeur produits/commandes */
+.btn-icon {
+  background: none; border: 1.5px solid #DDD9F5; border-radius: 7px;
+  padding: 5px 10px; cursor: pointer; font-size: 0.82rem; transition: all 0.18s;
+  font-family: 'Inter', sans-serif; font-weight: 600; margin-right: 4px;
+}
+.btn-icon.edit  { color: #2D1B69; border-color: #F0EEFB; }
+.btn-icon.edit:hover { background: #F0EEFB; }
+.btn-icon.del   { color: #E74C3C; border-color: #FCC; }
+.btn-icon.del:hover { background: #FEE; }
+.btn-icon.block { color: #F39C12; border-color: #FDE; }
+.btn-icon.block:hover { background: #FFF3CD; }
+.btn-icon.view  { color: #2980B9; border-color: #CCE5FF; }
+.btn-icon.view:hover { background: #E8F4FD; }
+.btn-icon.star  { color: #B8860B; border-color: #F5E3B8; }
+.btn-icon.star:hover { background: #FFF8E6; }
+.btn-icon.star.active { background: #F5A623; color: #fff; border-color: #F5A623; }
+
+/* ── Select changement de statut commande ──
+   Utilisé : Admin commandes, Vendeur commandes */
+.status-select {
+  border: 1.5px solid #DDD9F5; border-radius: 7px; padding: 5px 8px;
+  font-size: 0.78rem; background: #fff; color: #1A1A2E; cursor: pointer;
+  outline: none; font-family: 'Inter', sans-serif; transition: border-color 0.2s;
+}
+.status-select:focus { border-color: #2D1B69; }
+
+/* ── Onglets Auth ──
+   Utilisé : Auth.html (Connexion / Inscription) */
+.auth-tab {
+  flex: 1; padding: 1rem; text-align: center; cursor: pointer;
+  font-family: 'Sora', sans-serif; font-weight: 700; font-size: 0.9rem; color: #7070A0;
+  border: none; border-bottom: 3px solid transparent; background: none;
+  margin-bottom: -2px; transition: color 0.2s, border-color 0.2s;
+}
+.auth-tab.active { color: #2D1B69; border-bottom-color: #2D1B69; }
+.auth-tab:hover  { color: #2D1B69; }
+
+/* ── Bouton "Devenir vendeur" ──
+   Utilisé : Profil.html, section Mes informations */
+.btn-become-seller {
+  background: linear-gradient(135deg, #27AE60 0%, #1E8449 100%);
+  color: #fff; border: none; border-radius: 8px;
+  padding: 11px 22px; font-family: 'Sora', sans-serif; font-size: 0.88rem; font-weight: 700;
+  cursor: pointer; transition: transform 0.15s, box-shadow 0.2s;
+}
+.btn-become-seller:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(39,174,96,0.3); }
+
+/* ── Ajouter au panier (cartes produit) ──
+   Utilisé : Accueil, Catalogue, Produit */
+.add-btn {
+  background: #2D1B69; color: #fff; border: none; border-radius: 8px;
+  padding: 7px 12px; font-size: 0.8rem; cursor: pointer; font-weight: 600; transition: background 0.2s;
+}
+.add-btn:hover { background: #4A30A0; }
+
+/* ── Ajoutés depuis l'ancienne version du fichier (doublon fusionné) —
+   toujours utilisés (notifications admin/vendeur, bouton Enregistrer). ── */
+.btn-primary:active { transform: none; }
+.btn-notif {
+  background: #F2F0FB;
+  border: 2px solid #DDD9F5;
+  border-radius: 10px;
+  padding: 7px 11px;
+  cursor: pointer;
+  font-size: 1rem;
+  position: relative;
+  transition: border-color 0.2s;
+}
+.btn-notif:hover { border-color: #2D1B69; }
+.btn-notif .notif-dot {
+  position: absolute; top: 4px; right: 4px;
+  width: 8px; height: 8px;
+  background: #E74C3C; border-radius: 50%;
+}
+.btn-save {
+  background: #2D1B69;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 11px 28px;
+  font-family: 'Sora', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+.btn-save:hover { background: #4A30A0; transform: translateY(-1px); }

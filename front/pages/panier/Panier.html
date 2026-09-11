@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assigamé – Mon Panier</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../styles/base.css">
+<link rel="stylesheet" href="../../styles/components.css">
+<link rel="stylesheet" href="../../styles/buttons.css">
+<style>
+.cart-page-inner { max-width: 900px; margin: 0 auto; padding: 2.5rem 1.5rem; }
+.cart-page-inner h1 { font-size: 2rem; font-weight: 800; color: #2D1B69; margin-bottom: 2rem; }
+
+.cart-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 20px rgba(45,27,105,0.09); table-layout: fixed; }
+.cart-table th { background: #2D1B69; color: #fff; padding: 14px 16px; text-align: left; font-size: 0.85rem; font-family: 'Sora', sans-serif; }
+.cart-table th:last-child, .cart-table td:last-child { width: 130px; text-align: right; }
+.cart-table td { padding: 14px 16px; border-bottom: 1px solid #DDD9F5; font-size: 0.9rem; vertical-align: middle; }
+.cart-table tr:last-child td { border-bottom: none; }
+.cart-prod-info { display: flex; align-items: center; gap: 12px; }
+.cart-emoji { font-size: 2rem; background: #F0EEFB; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 8px; flex-shrink: 0; }
+.qty-control { display: flex; align-items: center; gap: 8px; }
+.qty-control button { width: 28px; height: 28px; border: 1.5px solid #DDD9F5; background: #fff; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 700; transition: border-color 0.2s; }
+.qty-control button:hover { border-color: #2D1B69; }
+.del-btn {
+  background: #FEF0EE; border: 1.5px solid #FBD5CF; color: #E74C3C; cursor: pointer;
+  font-size: 0.82rem; font-weight: 600; padding: 7px 12px; border-radius: 8px;
+  white-space: nowrap; transition: background 0.2s;
+}
+.del-btn:hover { background: #FCDEDA; }
+
+.cart-summary { margin-top: 1.5rem; background: #fff; border-radius: 14px; padding: 1.5rem; box-shadow: 0 4px 20px rgba(45,27,105,0.09); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+.cart-total { font-size: 1.5rem; font-weight: 800; color: #2D1B69; font-family: 'Sora', sans-serif; }
+
+@media (max-width: 700px) {
+  .cart-table thead { display: none; }
+  .cart-table, .cart-table tr, .cart-table td { display: block; width: 100%; }
+  .cart-table tr { border-bottom: 1px solid #DDD9F5; padding: 1rem 0; }
+  .cart-table td { border-bottom: none; padding: 6px 16px; }
+}
+
+.guest-orders { margin-top: 2.5rem; }
+.guest-orders h2 { font-size: 1.2rem; font-weight: 800; color: #2D1B69; margin-bottom: 0.3rem; }
+.guest-orders p.hint { color: #7070A0; font-size: 0.82rem; margin-bottom: 1rem; }
+.guest-order-card {
+  background: #fff; border-radius: 14px; padding: 1rem 1.25rem; margin-bottom: 0.8rem;
+  box-shadow: 0 4px 20px rgba(45,27,105,0.09); display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+}
+.guest-order-card .goc-info strong { color: #2D1B69; }
+.guest-order-card .goc-info div { font-size: 0.8rem; color: #7070A0; margin-top: 2px; }
+.guest-order-qr { width: 64px; height: 64px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a class="nav-logo" href="../home/Accueil.html"><i class="fa-solid fa-bag-shopping brand-icon"></i> <span class="brand-my">My</span> <span class="brand-b">B</span> Assigamé</a>
+  <div class="nav-right">
+    <a class="cart-btn" href="../panier/Panier.html"><i class="fa-solid fa-cart-shopping"></i> <span class="cart-badge" id="cart-count">0</span></a>
+    <a class="btn-login-nav" id="navAuthBtn" href="../auth/Auth.html">Connexion</a>
+  </div>
+</nav>
+
+<div class="cart-page-inner">
+  <h1><i class="fa-solid fa-cart-shopping"></i> Mon Panier</h1>
+  <div id="cartContent"><div style="text-align:center;padding:3rem;color:#7070A0">Chargement du panier…</div></div>
+  <div id="guestOrdersSection"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="../../services/api.js"></script>
+<script src="../../services/productService.js"></script>
+<script src="../../utils/toast.js"></script>
+<script src="../../utils/icons.js"></script>
+<script>
+let ALL_PRODUCTS = [];
+let usingRealProducts = false;
+
+function updateAuthBtn() {
+  const user = getCurrentUser();
+  const btn = document.getElementById("navAuthBtn");
+  if (user) {
+    btn.textContent = user.prenom || "Profil";
+    btn.href = user.role === "ADMIN" ? "../admin/Dashboard.html" : "../profil/Profil.html";
+  } else {
+    btn.href = "../auth/Auth.html?return=" + encodeURIComponent(window.location.href);
+  }
+}
+
+async function loadAllProducts() {
+  const { data, error } = await getAllProducts();
+  usingRealProducts = !error && Array.isArray(data) && data.length > 0;
+  ALL_PRODUCTS = (!error && Array.isArray(data)) ? data : [];
+}
+
+function renderCart() {
+  let cart = getCart();
+  const container = document.getElementById("cartContent");
+
+  /* Nettoyage : un article du panier peut référencer un produit qui
+     n'existe plus (supprimé, ou données de test périmées d'une session
+     précédente). On le retire silencieusement plutôt que d'afficher un
+     tableau vide sans aucune ligne ni bouton — c'est ce qui donnait
+     l'impression d'un panier "plein" mais bloqué. On ne le fait que si
+     on a de vraies données produits (pas le catalogue de secours), pour
+     ne jamais supprimer le panier par erreur si le serveur est
+     momentanément injoignable. */
+  if (usingRealProducts) {
+    const validCart = cart.filter(item => ALL_PRODUCTS.some(p => Number(p.id) === Number(item.id)));
+    if (validCart.length !== cart.length) { setCart(validCart); cart = validCart; }
+  }
+
+  if (!cart.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <span class="empty-icon"><i class="fa-solid fa-cart-shopping"></i></span>
+        <h3>Votre panier est vide</h3>
+        <p style="margin:1rem 0">Ajoutez des produits pour commencer vos achats</p>
+        <a class="btn-primary" href="../catalogue/Catalogue.html">Voir les produits</a>
+      </div>`;
+    return;
+  }
+
+  let total = 0;
+  const rows = cart.map(item => {
+    const p = ALL_PRODUCTS.find(x => x.id === item.id);
+    if (!p) return "";
+    const lineTotal = p.prix * item.quantite;
+    total += lineTotal;
+    return `
+      <tr>
+        <td><div class="cart-prod-info"><div class="cart-emoji">${productEmoji(p)}</div><div><strong>${p.nom}</strong></div></div></td>
+        <td>${p.prix.toLocaleString('fr-FR')} FCFA</td>
+        <td><div class="qty-control">
+          <button onclick="changeQty(${p.id},-1)">−</button><span>${item.quantite}</span><button onclick="changeQty(${p.id},1)">+</button>
+        </div></td>
+        <td><strong>${lineTotal.toLocaleString('fr-FR')} FCFA</strong></td>
+        <td><button class="del-btn" onclick="removeItem(${p.id})" title="Retirer du panier"><i class="fa-solid fa-trash"></i> Retirer</button></td>
+      </tr>`;
+  }).join("");
+
+  /* Filet de sécurité : si malgré tout aucune ligne n'a pu être générée
+     (ex. serveur injoignable au chargement), on l'explique clairement
+     plutôt que d'afficher un tableau vide et muet. */
+  if (!rows) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <span class="empty-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+        <h3>Impossible d'afficher votre panier</h3>
+        <p style="margin:1rem 0">Le serveur n'a pas répondu correctement. Rechargez la page pour réessayer.</p>
+        <button class="btn-primary" onclick="location.reload()">Recharger</button>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <table class="cart-table">
+      <thead><tr><th>Produit</th><th>Prix</th><th>Quantité</th><th>Total</th><th>Retirer</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="cart-summary">
+      <div><div style="color:#7070A0;font-size:0.85rem">Total de la commande</div><div class="cart-total">${total.toLocaleString('fr-FR')} FCFA</div>
+        <button class="del-btn" style="font-size:0.78rem;margin-top:4px" onclick="clearCartConfirm()"><i class="fa-solid fa-trash"></i> Vider le panier</button>
+      </div>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap">
+        <a class="btn-secondary" href="../catalogue/Catalogue.html">← Continuer les achats</a>
+        <a class="btn-primary" href="../commande/Commande.html">Valider la commande →</a>
+      </div>
+    </div>`;
+}
+function clearCartConfirm() {
+  if (!confirm("Vider entièrement le panier ?")) return;
+  clearCart();
+  renderCart();
+}
+
+function changeQty(productId, delta) {
+  const cart = getCart();
+  const item = cart.find(i => i.id === productId);
+  if (!item) return;
+  const product = ALL_PRODUCTS.find(p => p.id === productId);
+  const max = product?.stock || 99;
+  updateCartQty(productId, Math.max(1, Math.min(max, item.quantite + delta)));
+  renderCart();
+}
+function removeItem(productId) {
+  removeFromCart(productId);
+  showToast("Produit retiré du panier", "error");
+  renderCart();
+}
+
+/* Affiche les commandes passées en tant qu'invité (sans compte), retrouvées
+   via le localStorage de ce navigateur — voir saveGuestOrder() dans
+   utils/toast.js, appelée depuis Commande.html à la validation. Un
+   utilisateur connecté a son historique côté serveur (Profil.html), cette
+   section ne concerne donc que les visiteurs. */
+function renderGuestOrders() {
+  const section = document.getElementById("guestOrdersSection");
+  if (getCurrentUser()) { section.innerHTML = ""; return; }
+
+  const orders = getGuestOrders();
+  if (!orders.length) { section.innerHTML = ""; return; }
+
+  const cards = orders.map((o, idx) => {
+    const dateStr = o.date ? new Date(o.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : "";
+    return `
+      <div class="guest-order-card">
+        <div class="goc-info">
+          <strong>Commande ${o.reference}</strong>
+          <div>${dateStr}${o.total ? ` · ${o.total.toLocaleString('fr-FR')} FCFA` : ""}</div>
+          ${o.codeLivraison ? `<div>Code de livraison : <strong>${o.codeLivraison}</strong></div>` : `<div>Code de livraison indisponible</div>`}
+        </div>
+        ${o.codeLivraison ? `<div class="guest-order-qr" id="goc-qr-${idx}"></div>` : ""}
+      </div>`;
+  }).join("");
+
+  section.innerHTML = `
+    <div class="guest-orders">
+      <h2><i class="fa-solid fa-receipt"></i> Mes commandes</h2>
+      <p class="hint">Retrouvées sur cet appareil — conservez le code de livraison pour le remettre au livreur.</p>
+      ${cards}
+    </div>`;
+
+  orders.forEach((o, idx) => {
+    if (!o.codeLivraison) return;
+    const el = document.getElementById(`goc-qr-${idx}`);
+    if (el && window.QRCode) new QRCode(el, { text: o.codeLivraison, width: 64, height: 64 });
+  });
+}
+
+window.addEventListener("DOMContentLoaded", async () => {
+  updateCartBadge();
+  updateAuthBtn();
+  await loadAllProducts();
+  renderCart();
+  renderGuestOrders();
+});
+</script>
+</body>
+</html>

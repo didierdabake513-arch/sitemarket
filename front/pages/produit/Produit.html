@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assigamé – Détail du produit</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../styles/base.css">
+<link rel="stylesheet" href="../../styles/components.css">
+<link rel="stylesheet" href="../../styles/buttons.css">
+<style>
+.back-link { padding: 1.5rem 2rem; max-width: 1000px; margin: 0 auto; }
+.back-link a { color: #4A30A0; text-decoration: none; font-size: 0.9rem; cursor: pointer; }
+.back-link a:hover { text-decoration: underline; }
+
+.detail-inner { max-width: 1000px; margin: 0 auto; padding: 0 1.5rem 3rem; display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; }
+.detail-img-box { background: #F0EEFB; border-radius: 14px; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 8rem; box-shadow: 0 4px 20px rgba(45,27,105,0.09); overflow: hidden; }
+.gallery-thumbs { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.gallery-thumb { width: 56px; height: 56px; border-radius: 8px; overflow: hidden; padding: 0; border: 2px solid transparent; cursor: pointer; background: #F0EEFB; }
+.gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gallery-thumb.active { border-color: #2D1B69; }
+.detail-info h1 { font-size: 1.8rem; font-weight: 800; color: #2D1B69; margin-bottom: 0.5rem; }
+.detail-cat { color: #7070A0; font-size: 0.9rem; margin-bottom: 1rem; }
+.detail-price { font-size: 2rem; font-weight: 800; color: #F5A623; font-family: 'Sora', sans-serif; margin-bottom: 0.5rem; }
+.detail-price-old { font-size: 1rem; color: #7070A0; text-decoration: line-through; }
+.detail-stock { display: flex; align-items: center; gap: 8px; margin: 1rem 0; font-size: 0.9rem; }
+.stock-dot { width: 10px; height: 10px; border-radius: 50%; background: #27AE60; }
+.stock-dot.low { background: #E74C3C; }
+.detail-desc { color: #7070A0; font-size: 0.95rem; line-height: 1.7; margin: 1.5rem 0; border-top: 1px solid #DDD9F5; padding-top: 1.5rem; }
+
+/* Estimation livraison — différenciée connecté / non connecté
+   ⚙️ NOTE BACK : l'estimation précise pour un client connecté doit être
+   calculée par Spring Boot à partir de son adresse réelle enregistrée
+   (ex: GET /api/utilisateurs/me/estimation-livraison?produitId=X).
+   Ici on simule seulement l'affichage différent. */
+.delivery-estimate { background: #F0EEFB; border-radius: 10px; padding: 12px 16px; margin: 1rem 0; font-size: 0.85rem; color: #2D1B69; display: flex; align-items: center; gap: 10px; }
+.delivery-estimate.guest { background: #FFF8ED; color: #8a5500; }
+
+.qty-picker { display: flex; align-items: center; gap: 12px; margin: 1.5rem 0; }
+.qty-btn { width: 36px; height: 36px; border: 2px solid #DDD9F5; background: #fff; border-radius: 8px; font-size: 1.2rem; cursor: pointer; font-weight: 700; display: flex; align-items: center; justify-content: center; transition: border-color 0.2s; }
+.qty-btn:hover { border-color: #2D1B69; }
+.qty-val { font-size: 1.1rem; font-weight: 700; min-width: 30px; text-align: center; font-family: 'Sora', sans-serif; }
+.detail-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+.btn-add-cart { flex: 1; padding: 14px 24px !important; font-size: 1rem !important; }
+.btn-buy-now  { flex: 1; padding: 14px 24px !important; font-size: 1rem !important; }
+.btn-disabled { opacity: 0.5; cursor: not-allowed; }
+
+.related-section { max-width: 1000px; margin: 0 auto; padding: 0 1.5rem 3rem; }
+.related-title { font-size: 1.3rem; font-weight: 700; color: #2D1B69; margin-bottom: 1.2rem; }
+.related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.2rem; }
+.related-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(45,27,105,0.09); text-decoration: none; color: #1A1A2E; transition: transform 0.2s; }
+.related-card:hover { transform: translateY(-4px); }
+.related-img { aspect-ratio: 1; background: #F0EEFB; display: flex; align-items: center; justify-content: center; font-size: 3rem; }
+.related-info { padding: 0.8rem; }
+.related-info h4 { font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; }
+.related-info .price { color: #2D1B69; font-weight: 700; font-size: 0.9rem; font-family: 'Sora', sans-serif; }
+
+@media (max-width: 768px) { .detail-inner { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a class="nav-logo" href="../home/Accueil.html"><i class="fa-solid fa-bag-shopping brand-icon"></i> <span class="brand-my">My</span> <span class="brand-b">B</span> Assigamé</a>
+  <div class="nav-right">
+    <a class="cart-btn" href="../panier/Panier.html"><i class="fa-solid fa-cart-shopping"></i> <span class="cart-badge" id="cart-count">0</span></a>
+    <a class="btn-login-nav" id="navAuthBtn" href="../auth/Auth.html">Connexion</a>
+  </div>
+</nav>
+
+<div class="back-link"><a href="../catalogue/Catalogue.html">← Retour au catalogue</a></div>
+
+<div class="detail-inner" id="detailContent">
+  <div style="grid-column:1/-1;text-align:center;padding:3rem;color:#7070A0">Chargement du produit…</div>
+</div>
+
+<div class="related-section" id="relatedSection" style="display:none">
+  <div class="related-title">Produits similaires</div>
+  <div class="related-grid" id="relatedGrid"></div>
+</div>
+
+<footer class="site-footer">
+  <div class="footer-grid">
+    <div class="footer-brand"><div class="logo"><i class="fa-solid fa-bag-shopping brand-icon"></i> <span class="brand-my">My</span> <span class="brand-b">B</span> Assigamé</div><p>Votre marché en ligne de confiance au Togo.</p></div>
+    <div class="footer-col"><h4>Navigation</h4>
+      <a href="../home/Accueil.html">Accueil</a><a href="../catalogue/Catalogue.html">Catalogue</a>
+      <a href="../panier/Panier.html">Mon panier</a><a href="../profil/Profil.html">Mon profil</a></div>
+    <div class="footer-col"><h4>Support</h4><a>FAQ</a><a>Livraison</a><a>Retours</a><a>Contact</a></div>
+    <div class="footer-col"><h4>Contact</h4><a><i class="fa-solid fa-phone"></i> +228 90 00 00 00</a><a><i class="fa-solid fa-envelope"></i> contact@assigame.tg</a><a><i class="fa-solid fa-location-dot"></i> Lomé, Togo</a></div>
+  </div>
+  <div class="footer-bottom">© 2026 Assigamé. Tous droits réservés.</div>
+</footer>
+
+<script src="../../services/api.js"></script>
+<script src="../../services/productService.js"></script>
+<script src="../../services/messageService.js"></script>
+<script src="../../utils/toast.js"></script>
+<script src="../../utils/icons.js"></script>
+<script src="../../utils/featureGate.js"></script>
+<script>
+
+let CURRENT_PRODUCT = null;
+let ALL_PRODUCTS = [];
+let qty = 1;
+
+function updateAuthBtn() {
+  const user = getCurrentUser();
+  const btn = document.getElementById("navAuthBtn");
+  if (user) {
+    btn.textContent = user.prenom || "Profil";
+    btn.href = user.role === "ADMIN" ? "../admin/Dashboard.html" : "../profil/Profil.html";
+  } else {
+    btn.href = "../auth/Auth.html?return=" + encodeURIComponent(window.location.href);
+  }
+}
+
+async function loadProductDetail(id) {
+  const { data, error } = await getProductById(id);
+  CURRENT_PRODUCT = (!error && data) ? data : null;
+}
+async function loadAllProducts() {
+  const { data, error } = await getAllProducts();
+  ALL_PRODUCTS = (!error && Array.isArray(data)) ? data : [];
+}
+
+function renderDetail() {
+  const p = CURRENT_PRODUCT;
+  if (!p) {
+    document.getElementById("detailContent").innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#7070A0">
+      Produit introuvable. <a href="../catalogue/Catalogue.html" style="color:#2D1B69">Retour au catalogue</a></div>`;
+    return;
+  }
+  const oldP = p.prixBarre ? `<span class="detail-price-old">${p.prixBarre.toLocaleString('fr-FR')} FCFA</span>` : "";
+  const stockDotCls = p.stock <= 5 ? "low" : "";
+  const stockTxt = p.stock > 0 ? `${p.stock} en stock` : "Rupture de stock";
+  const disabled = p.stock === 0;
+
+  /* Estimation livraison : différente selon connecté ou non.
+     ⚙️ Idéalement calculée côté back (voir commentaire au-dessus dans le <style>) */
+  const user = getCurrentUser();
+  const deliveryHtml = `<div class="delivery-estimate${user ? '' : ' guest'}">
+    <i class="fa-solid fa-truck"></i>
+    Délai indicatif : 2 à 5 jours selon votre zone.
+    <a href="#" onclick="return showComingSoon(event)" style="color:#2D1B69;font-weight:700;margin-left:4px">Estimation précise (géolocalisation)</a>
+  </div>`;
+
+  const gallery = (p.images && p.images.length) ? p.images : (p.imageBase64 ? [p.imageBase64] : []);
+  const mainImgHtml = gallery.length
+    ? `<img id="mainGalleryImg" src="${gallery[0]}" alt="${p.nom}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">`
+    : productEmoji(p);
+  const thumbsHtml = gallery.length > 1 ? `
+    <div class="gallery-thumbs" id="galleryThumbs">
+      ${gallery.map((src, i) => `<button class="gallery-thumb ${i===0?'active':''}" onclick="switchGalleryImg(${i}, this)"><img src="${src}" alt="Photo ${i+1}"></button>`).join("")}
+    </div>` : "";
+  window.PRODUCT_GALLERY = gallery;
+
+  document.getElementById("detailContent").innerHTML = `
+    <div>
+      <div class="detail-img-box" id="mainGalleryBox">${mainImgHtml}</div>
+      ${thumbsHtml}
+    </div>
+    <div class="detail-info">
+      <div class="detail-cat">${p.categorie}</div>
+      <h1>${p.nom}</h1>
+      <div class="detail-price">${p.prix.toLocaleString('fr-FR')} FCFA ${oldP}</div>
+      <div class="detail-stock"><div class="stock-dot ${stockDotCls}"></div> ${stockTxt}</div>
+      ${deliveryHtml}
+      <div class="detail-desc">${p.description||""}<br><br>Paiement à la livraison disponible. Retour possible sous 7 jours.</div>
+      <div class="qty-picker">
+        <button class="qty-btn" onclick="changeQty(-1)">−</button>
+        <span class="qty-val" id="qtyVal">1</span>
+        <button class="qty-btn" onclick="changeQty(1)">+</button>
+        <span style="color:#7070A0;font-size:0.85rem">unités</span>
+      </div>
+      <div class="detail-actions">
+        <button class="btn-primary btn-add-cart ${disabled?'btn-disabled':''}" ${disabled?'disabled':''} onclick="addToCartAndNotify()"><i class="fa-solid fa-cart-shopping"></i> Ajouter au panier</button>
+        <button class="btn-gold btn-buy-now ${disabled?'btn-disabled':''}" ${disabled?'disabled':''} onclick="buyNow()"><i class="fa-solid fa-bolt"></i> Commander maintenant</button>
+      </div>
+      ${p.vendeurId ? `<button class="btn-secondary" style="width:100%;margin-top:0.75rem" onclick="contacterVendeur(${p.id}, ${p.vendeurId})"><i class="fa-solid fa-comment-dots"></i> Contacter le vendeur</button>` : ""}
+    </div>`;
+}
+
+function switchGalleryImg(index, btn) {
+  const src = (window.PRODUCT_GALLERY || [])[index];
+  if (!src) return;
+  const box = document.getElementById("mainGalleryBox");
+  box.innerHTML = `<img id="mainGalleryImg" src="${src}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">`;
+  document.querySelectorAll(".gallery-thumb").forEach(t => t.classList.remove("active"));
+  btn.classList.add("active");
+}
+
+function changeQty(delta) {
+  const max = CURRENT_PRODUCT?.stock || 99;
+  qty = Math.max(1, Math.min(max, qty + delta));
+  document.getElementById("qtyVal").textContent = qty;
+}
+function addToCartAndNotify() {
+  if (!CURRENT_PRODUCT) return;
+  addToCart(CURRENT_PRODUCT.id, qty);
+  showToast(`${CURRENT_PRODUCT.nom} ajouté au panier ✓`, "success");
+}
+function buyNow() { addToCartAndNotify(); window.location.href = "../commande/Commande.html"; }
+
+async function contacterVendeur(produitId, vendeurId) {
+  const user = getCurrentUser();
+  if (!user) { window.location.href = "../auth/Auth.html?return=" + encodeURIComponent(window.location.href); return; }
+  if (user.role !== "CLIENT") { showToast("Seul un compte client peut contacter un vendeur", "warning"); return; }
+  const { data, error } = await demarrerConversation({ autreUtilisateurId: vendeurId, produitId });
+  if (error) { showToast(error, "error"); return; }
+  window.location.href = `../messagerie/Messagerie.html?conv=${data.id}`;
+}
+
+function renderRelated() {
+  if (!CURRENT_PRODUCT) return;
+  const related = ALL_PRODUCTS.filter(p => p.categorie === CURRENT_PRODUCT.categorie && p.id !== CURRENT_PRODUCT.id).slice(0, 4);
+  if (!related.length) return;
+  document.getElementById("relatedSection").style.display = "block";
+  document.getElementById("relatedGrid").innerHTML = related.map(p => `
+    <a class="related-card" href="../produit/Produit.html?id=${p.id}">
+      <div class="related-img">${productEmoji(p)}</div>
+      <div class="related-info"><h4>${p.nom}</h4><div class="price">${p.prix.toLocaleString('fr-FR')} FCFA</div></div>
+    </a>`).join("");
+}
+
+window.addEventListener("DOMContentLoaded", async () => {
+  updateCartBadge();
+  updateAuthBtn();
+  const params = new URLSearchParams(window.location.search);
+  const id = parseInt(params.get("id")) || 1;
+  await Promise.all([loadProductDetail(id), loadAllProducts()]);
+  renderDetail();
+  renderRelated();
+});
+</script>
+</body>
+</html>

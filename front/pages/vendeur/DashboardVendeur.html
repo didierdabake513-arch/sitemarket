@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assigamé – Espace Vendeur</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../styles/base.css">
+<link rel="stylesheet" href="../../styles/components.css">
+<link rel="stylesheet" href="../../styles/buttons.css">
+<style>
+body { display: flex; }
+/* Sidebar verte pour différencier visuellement du violet Admin */
+.sidebar.vendeur-sidebar { background: linear-gradient(180deg, #1E8449 0%, #196F3D 100%); }
+.vendeur-sidebar .menu-item:hover  { background: rgba(255,255,255,0.08); }
+.vendeur-sidebar .menu-item.active { background: rgba(255,255,255,0.13); border-left-color: #F5A623; }
+.vendeur-sidebar .admin-chip-avatar { background: rgba(255,255,255,0.18); }
+
+/* ── Upload photos produit — galerie (plusieurs photos, obligatoire) ── */
+.img-gallery-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 0.6rem; }
+.img-gallery-thumb {
+  width: 72px; height: 72px; border-radius: 10px; flex-shrink: 0;
+  background: #F0EEFB; overflow: hidden; position: relative;
+}
+.img-gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.img-gallery-thumb .cover-badge {
+  position: absolute; bottom: 0; left: 0; right: 0; background: rgba(45,27,105,0.85); color: #fff;
+  font-size: 0.6rem; text-align: center; padding: 2px 0; font-weight: 700;
+}
+.img-gallery-thumb .thumb-remove-btn {
+  position: absolute; top: 2px; right: 2px;
+  background: rgba(45,27,105,0.75); color: #fff;
+  border: none; border-radius: 50%; width: 18px; height: 18px;
+  font-size: 10px; line-height: 18px; text-align: center; cursor: pointer;
+}
+.img-gallery-add {
+  width: 72px; height: 72px; border-radius: 10px; flex-shrink: 0;
+  background: #F0EEFB; border: 2px dashed #C9C2F0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; color: #9C92C9; cursor: pointer; transition: border-color 0.2s;
+}
+.img-gallery-add:hover { border-color: #7C5CBF; }
+.btn-upload-img {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #F0EEFB; border: 1px solid #C9C2F0;
+  border-radius: 8px; padding: 0.45rem 0.85rem;
+  font-size: 0.82rem; font-weight: 600; color: #2D1B69;
+  cursor: pointer; transition: background 0.2s;
+  white-space: nowrap; width: fit-content;
+}
+.btn-upload-img:hover { background: #DDD9F5; }
+
+/* ── Champ catégorie libre ── */
+#m-cat-custom {
+  border: 2px dashed #C9C2F0;
+  transition: border-color 0.2s;
+}
+#m-cat-custom:focus { border-color: #7C5CBF; outline: none; box-shadow: 0 0 0 3px rgba(124,92,191,0.12); }
+
+/* ── Miniature dans le tableau ── */
+.prod-img-cell {
+  width: 40px; height: 40px; border-radius: 8px;
+  object-fit: cover; display: block;
+}
+.prod-emoji-text { font-size: 1.6rem; line-height: 1; }
+.delivery-card {
+  background: #fff; border-radius: 10px; padding: 0.9rem 1rem;
+  box-shadow: 0 2px 10px rgba(45,27,105,0.06); display: flex; flex-direction: column; gap: 4px;
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ SIDEBAR VENDEUR ═══════════════ -->
+<div class="sidebar vendeur-sidebar">
+  <div class="sidebar-brand">
+    <div class="logo"><i class="fa-solid fa-bag-shopping brand-icon"></i> <span class="brand-my">My</span> <span class="brand-b">B</span> Assigamé</div>
+    <p>Espace Vendeur</p>
+  </div>
+
+  <div class="sidebar-menu">
+    <div class="menu-label">Principal</div>
+    <a class="menu-item active" id="mi-dashboard" onclick="goSection('dashboard')"><span class="mi-icon"><i class="fa-solid fa-chart-line"></i></span> Tableau de bord</a>
+
+    <div class="menu-label">Gestion</div>
+    <a class="menu-item" id="mi-products" onclick="goSection('products')"><span class="mi-icon"><i class="fa-solid fa-box"></i></span> Mes produits</a>
+    <a class="menu-item" id="mi-orders" onclick="goSection('orders')">
+      <span class="mi-icon"><i class="fa-solid fa-clipboard-list"></i></span> Commandes reçues
+      <span class="badge-count" id="pending-badge">0</span>
+    </a>
+    <a class="menu-item" id="mi-livreurs" onclick="goSection('livreurs')"><span class="mi-icon"><i class="fa-solid fa-truck-fast"></i></span> Mes livreurs</a>
+    <a class="menu-item" href="../messagerie/Messagerie.html"><span class="mi-icon"><i class="fa-solid fa-comment-dots"></i></span> Messages</a>
+
+    <div class="menu-label">Autre</div>
+    <a class="menu-item" href="../profil/Profil.html"><span class="mi-icon"><i class="fa-solid fa-user"></i></span> Mon profil</a>
+    <a class="menu-item" href="../home/Accueil.html"><span class="mi-icon"><i class="fa-solid fa-globe"></i></span> Voir le site</a>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="admin-chip">
+      <div class="admin-chip-avatar" id="vendeurInitial" onclick="goProfil()" title="Mon profil">V</div>
+      <div onclick="goProfil()" style="cursor:pointer;flex:1" title="Mon profil">
+        <div class="admin-chip-name" id="vendeurName">Vendeur</div>
+        <div class="admin-chip-role">Espace vendeur</div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()" title="Déconnexion">⎋</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MAIN ═══════════════ -->
+<div class="admin-main-wrap">
+
+  <div class="admin-topbar">
+    <div class="admin-topbar-title" id="topbar-title">Tableau de bord vendeur</div>
+    <div class="topbar-right">
+      <div class="topbar-search-wrap">
+        <i class="fa-solid fa-magnifying-glass search-ico"></i>
+        <input class="topbar-search" placeholder="Rechercher…" oninput="globalSearch(this.value)">
+      </div>
+      <button class="btn-notif" onclick="showComingSoon(event)"><i class="fa-solid fa-bell"></i><span class="notif-dot"></span></button>
+    </div>
+  </div>
+
+  <div class="admin-content">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div class="admin-section active" id="sec-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-icon"><i class="fa-solid fa-box"></i></span><div class="stat-label">Mes produits</div>
+          <div class="stat-value" id="s-products"><div class="skeleton skeleton-val"></div></div>
+          <div class="stat-change" id="s-products-sub"><div class="skeleton skeleton-sub"></div></div>
+        </div>
+        <div class="stat-card gold">
+          <span class="stat-icon"><i class="fa-solid fa-coins"></i></span><div class="stat-label">Mes revenus (FCFA)</div>
+          <div class="stat-value" id="s-revenue"><div class="skeleton skeleton-val"></div></div>
+          <div class="stat-change up" id="s-revenue-sub"><div class="skeleton skeleton-sub"></div></div>
+        </div>
+        <div class="stat-card green">
+          <span class="stat-icon"><i class="fa-solid fa-clipboard-list"></i></span><div class="stat-label">Commandes reçues</div>
+          <div class="stat-value" id="s-orders"><div class="skeleton skeleton-val"></div></div>
+          <div class="stat-change" id="s-orders-sub"><div class="skeleton skeleton-sub"></div></div>
+        </div>
+        <div class="stat-card red">
+          <span class="stat-icon">⭐</span><div class="stat-label">Note moyenne</div>
+          <div class="stat-value" id="s-rating"><div class="skeleton skeleton-val"></div></div>
+          <div class="stat-change" id="s-rating-sub"><div class="skeleton skeleton-sub"></div></div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-card-title">
+            <span>Mes revenus des 6 derniers mois (FCFA)</span>
+            <select class="chart-year-select" id="yearSelect" onchange="reloadBarChart(this.value)">
+              <option value="2025">2025</option><option value="2024">2024</option>
+            </select>
+          </div>
+          <div id="bar-chart"><div class="skeleton" style="height:160px;border-radius:8px"></div></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Mes ventes par catégorie</div>
+          <div id="donut-chart"><div class="skeleton" style="height:160px;border-radius:8px"></div></div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header"><h3>Dernières commandes reçues</h3><button class="btn-primary" onclick="goSection('orders')">Voir tout →</button></div>
+        <table>
+          <thead><tr><th>Référence</th><th>Client</th><th>Produit(s)</th><th>Total</th><th>Statut</th><th>Date</th></tr></thead>
+          <tbody id="recent-orders-body"><tr><td colspan="6"><div class="skeleton" style="height:14px;border-radius:4px"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ MES PRODUITS ══ -->
+    <div class="admin-section" id="sec-products">
+      <div class="section-top">
+        <h2>Mes produits</h2>
+        <div style="display:flex;gap:0.75rem;align-items:center">
+          <div class="topbar-search-wrap">
+            <i class="fa-solid fa-magnifying-glass search-ico"></i>
+            <input class="topbar-search" placeholder="Filtrer…" oninput="filterTable('products-body', this.value)">
+          </div>
+          <button class="btn-primary" onclick="openModal()">+ Ajouter un produit</button>
+        </div>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead><tr><th>Produit</th><th>Catégorie</th><th>Prix</th><th>Stock</th><th>Statut</th><th>Actions</th></tr></thead>
+          <tbody id="products-body"><tr><td colspan="6" style="text-align:center;padding:2rem;color:#7070A0">Chargement…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ COMMANDES REÇUES ══ -->
+    <div class="admin-section" id="sec-orders">
+      <div class="section-top">
+        <h2>Commandes reçues</h2>
+        <div class="topbar-search-wrap">
+          <i class="fa-solid fa-magnifying-glass search-ico"></i>
+          <input class="topbar-search" placeholder="Filtrer…" oninput="filterTable('orders-body', this.value)">
+        </div>
+      </div>
+      <p class="text-sm text-muted" style="margin-bottom:1rem">
+        Seules les commandes contenant au moins un de vos produits apparaissent ici.
+      </p>
+      <div class="table-card">
+        <table>
+          <thead><tr><th>Référence</th><th>Client</th><th>Mes produit(s)</th><th>Total</th><th>Statut</th><th>Changer statut</th><th>Livreur</th><th>Date</th></tr></thead>
+          <tbody id="orders-body"><tr><td colspan="8" style="text-align:center;padding:2rem;color:#7070A0">Chargement…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ MES LIVREURS ══ -->
+    <div class="admin-section" id="sec-livreurs">
+      <div class="section-top">
+        <h2>Mes livreurs</h2>
+        <button class="btn-primary" onclick="openLivreurModal()"><i class="fa-solid fa-plus"></i> Ajouter un livreur</button>
+      </div>
+      <p class="text-sm text-muted" style="margin-bottom:1rem">
+        Créez un compte pour chacun de vos livreurs — ils pourront ensuite se connecter sur
+        <strong>Assigamé</strong> pour voir leurs livraisons assignées et confirmer chaque remise
+        de colis en scannant le QR code du client.
+      </p>
+      <div class="table-card">
+        <table>
+          <thead><tr><th>Nom</th><th>Email</th><th>Téléphone</th><th>En attente de départ</th><th>En cours</th><th>Statut</th><th>Actions</th></tr></thead>
+          <tbody id="livreurs-body"><tr><td colspan="7" style="text-align:center;padding:2rem;color:#7070A0">Chargement…</td></tr></tbody>
+        </table>
+      </div>
+
+      <!-- ── Groupes de livraison ── -->
+      <div class="section-top" style="margin-top:2rem">
+        <h2>Groupes de livraison</h2>
+        <button class="btn-primary" onclick="openGroupeModal()"><i class="fa-solid fa-plus"></i> Créer un groupe</button>
+      </div>
+      <p class="text-sm text-muted" style="margin-bottom:1rem">
+        Un groupe partage l'équipe de livreurs de son créateur avec tous ses membres.
+        Rejoindre un groupe est libre — vous pourrez alors assigner vos commandes aux
+        livreurs de ce groupe, en plus des vôtres.
+      </p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem" id="groupesWrap">
+        <div>
+          <h4 style="font-size:0.85rem;color:#7070A0;margin-bottom:0.6rem">MES GROUPES</h4>
+          <div id="mesGroupesList"><p class="text-sm text-muted">Chargement…</p></div>
+        </div>
+        <div>
+          <h4 style="font-size:0.85rem;color:#7070A0;margin-bottom:0.6rem">TOUS LES GROUPES</h4>
+          <div id="tousGroupesList"><p class="text-sm text-muted">Chargement…</p></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL LIVREUR -->
+<div class="modal-overlay" id="livreur-modal">
+  <div class="modal-box">
+    <div class="modal-title">Ajouter un livreur</div>
+    <div class="form-row">
+      <div class="form-group"><label>Nom *</label><input class="form-control no-icon" id="lv-nom" placeholder="Kokou"></div>
+      <div class="form-group"><label>Prénom *</label><input class="form-control no-icon" id="lv-prenom" placeholder="Ama"></div>
+    </div>
+    <div class="form-group"><label>Téléphone *</label><input class="form-control no-icon" id="lv-tel" placeholder="+228 90 00 00 00"></div>
+    <div class="form-group"><label>Email *</label><input class="form-control no-icon" type="email" id="lv-email" placeholder="livreur@exemple.com"></div>
+    <div class="form-group"><label>Mot de passe *</label><input class="form-control no-icon" type="password" id="lv-pwd" placeholder="Min. 6 caractères"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeLivreurModal()">Annuler</button>
+      <button class="btn-primary" style="flex:1" id="lv-save-btn" onclick="saveLivreur()">Créer le compte</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GROUPE DE LIVRAISON -->
+<div class="modal-overlay" id="groupe-modal">
+  <div class="modal-box">
+    <div class="modal-title">Créer un groupe de livraison</div>
+    <p class="text-sm text-muted" style="margin-bottom:1rem">Vous devez avoir au moins un livreur pour créer un groupe — c'est votre équipe qui sera partagée avec les membres.</p>
+    <div class="form-group"><label>Nom du groupe *</label><input class="form-control no-icon" id="gr-nom" placeholder="Livraison rapide Lomé"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeGroupeModal()">Annuler</button>
+      <button class="btn-primary" style="flex:1" id="gr-save-btn" onclick="saveGroupe()">Créer le groupe</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PRODUIT -->
+<div class="modal-overlay" id="product-modal">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title">Ajouter un produit</div>
+    <div class="form-group"><label>Nom du produit *</label><input class="form-control no-icon" id="m-name" placeholder="Sneakers Nike Air Max"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Prix (FCFA) *</label><input class="form-control no-icon" type="number" id="m-price" placeholder="25000" min="0"></div>
+      <div class="form-group"><label>Stock *</label><input class="form-control no-icon" type="number" id="m-stock" placeholder="50" min="0"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Catégorie</label>
+        <select class="form-control no-icon" id="m-cat" onchange="onCatChange(this)">
+          <option value="Chaussures">Chaussures</option>
+          <option value="Vêtements">Vêtements</option>
+          <option value="Électronique">Électronique</option>
+          <option value="Accessoires">Accessoires</option>
+          <option value="Sport">Sport</option>
+          <option value="Maison">Maison</option>
+          <option value="__AUTRE__">✏️ Autre (saisir…)</option>
+        </select>
+        <input class="form-control no-icon" id="m-cat-custom"
+               placeholder="Ex: Beauté, Alimentation, Jouets…"
+               style="margin-top:8px;display:none"
+               oninput="this.value=this.value">
+      </div>
+      <div class="form-group">
+        <label>Photos du produit * <span style="font-weight:400;color:#9090B8">(jusqu'à 10, la première sert de couverture)</span></label>
+        <div class="img-gallery-grid" id="img-gallery-grid"></div>
+        <input type="file" id="m-img-file" accept="image/*" multiple style="display:none" onchange="handleImgUpload(event)">
+        <button type="button" class="btn-upload-img" onclick="triggerImgUpload()">
+          <i class="fa-solid fa-arrow-up-from-bracket"></i> Ajouter des photos
+        </button>
+        <span style="font-size:0.75rem;color:#9090B8;margin-left:8px">JPG, PNG ou WEBP — 2 Mo par photo</span>
+        <div class="field-err" id="m-img-err" style="display:none">Au moins une photo du produit est requise</div>
+      </div>
+    </div>
+    <div class="form-group"><label>Description courte</label><input class="form-control no-icon" id="m-desc" placeholder="Description du produit…"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Prix barré (optionnel)</label><input class="form-control no-icon" type="number" id="m-old-price" placeholder="35000" min="0"></div>
+      <div class="form-group" style="display:flex;align-items:flex-end;padding-bottom:2px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="m-promo" style="accent-color:#1E8449;width:16px;height:16px"> En promotion</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+      <button class="btn-primary" style="flex:1;background:#1E8449" id="modal-save-btn" onclick="saveProduct()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="../../services/api.js"></script>
+<script src="../../services/authService.js"></script>
+<script src="../../services/productService.js"></script>
+<script src="../../services/orderService.js"></script>
+<script src="../../services/messageService.js"></script>
+<script src="../../services/statsService.js"></script>
+<script src="../../utils/charts.js"></script>
+<script src="../../utils/toast.js"></script>
+<script src="../../utils/icons.js"></script>
+<script src="../../utils/featureGate.js"></script>
+<script>
+let STATE = { products: [], orders: [], livreurs: [], livreursDisponibles: [], mesGroupes: [], tousGroupes: [] };
+let editingProductId = null;
+const usingDemoData = false;
+
+window.addEventListener("DOMContentLoaded", async () => {
+  /* Garde d'accès : seul un VENDEUR (ou ADMIN en test) accède à cette page */
+  const user = getCurrentUser();
+  if (!user) { window.location.href = "../auth/Auth.html"; return; }
+  if (user.role !== "VENDEUR" && user.role !== "ADMIN") {
+    showToast("Accès réservé aux vendeurs", "error");
+    setTimeout(() => window.location.href = "../profil/Profil.html", 1500);
+    return;
+  }
+  initVendeurInfo(user);
+  window.CURRENT_VENDEUR_ID = user.id;
+  await loadAll();
+  await renderDashboard();
+});
+
+function initVendeurInfo(user) {
+  const name = `${user.prenom||""} ${user.nom||""}`.trim() || "Vendeur";
+  document.getElementById("vendeurName").textContent = name;
+  document.getElementById("vendeurInitial").textContent = name[0].toUpperCase();
+}
+
+async function loadAll() {
+  const [pRes, oRes, lRes, ldRes, mgRes, tgRes] = await Promise.all([
+    getMyProducts(), getVendeurOrders(), getMesLivreurs(), getLivreursDisponibles(), getMesGroupes(), getTousLesGroupes()
+  ]);
+  if (pRes.error === "NETWORK_ERROR") {
+    showToast("Serveur indisponible — données non chargées", "error");
+    STATE.products = [];
+    STATE.orders = [];
+    STATE.livreurs = [];
+    STATE.livreursDisponibles = [];
+    STATE.mesGroupes = [];
+    STATE.tousGroupes = [];
+  } else {
+    STATE.products = pRes.data || [];
+    STATE.orders   = oRes.data || [];
+    STATE.livreurs = lRes.data || [];
+    STATE.livreursDisponibles = ldRes.data || [];
+    STATE.mesGroupes = mgRes.data || [];
+    STATE.tousGroupes = tgRes.data || [];
+  }
+}
+
+/* ── DASHBOARD ── */
+async function renderDashboard() {
+  const summary = await getVendeurSummary(STATE);
+  const pending = STATE.orders.filter(o => o.statut === "EN_ATTENTE").length;
+
+  setStatCard("s-products", summary.products, summary.products > 0 ? `${summary.products} produit(s) en ligne` : "Aucun produit");
+  setStatCard("s-revenue", summary.revenue >= 1000 ? `${(summary.revenue/1000).toFixed(0)}k` : summary.revenue, summary.revenue > 0 ? "↑ Total des ventes" : "Aucune vente");
+  setStatCard("s-orders", summary.orders, pending > 0 ? `${pending} en attente` : "Toutes traitées");
+  setStatCard("s-rating", "—", "Avis clients — bientôt");
+
+  document.getElementById("pending-badge").textContent = pending;
+
+  const year = parseInt(document.getElementById("yearSelect").value) || 2025;
+  const monthly = await getRevenueMonthly(STATE.orders, year, "/stats/vendeur/revenue-monthly");
+  drawBarChart("bar-chart", monthly.slice(-6));
+
+  const catData = await getSalesByCategory(STATE.orders, STATE.products);
+  drawDonutChart("donut-chart", catData);
+
+  renderRecentOrders(STATE.orders.slice(-5).reverse());
+}
+function setStatCard(valueId, value, subText) {
+  const valEl = document.getElementById(valueId), subEl = document.getElementById(`${valueId}-sub`);
+  if (valEl) valEl.textContent = typeof value === "number" ? value.toLocaleString('fr-FR') : value;
+  if (subEl) subEl.textContent = subText || "";
+}
+async function reloadBarChart(year) {
+  document.getElementById("bar-chart").innerHTML = `<div class="skeleton" style="height:160px;border-radius:8px"></div>`;
+  const monthly = await getRevenueMonthly(STATE.orders, parseInt(year), "/stats/vendeur/revenue-monthly");
+  drawBarChart("bar-chart", monthly.slice(-6));
+}
+function renderRecentOrders(orders) {
+  const tbody = document.getElementById("recent-orders-body");
+  if (!orders.length) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;color:#7070A0">Aucune commande reçue pour le moment</td></tr>`; return; }
+  tbody.innerHTML = orders.map(o => {
+    const cls = STATUS_CLS(o.statut), label = STATUS_LBL(o.statut);
+    const date = new Date(o.dateCommande || Date.now()).toLocaleDateString("fr-FR");
+    return `<tr><td><strong>${o.reference||o.id}</strong></td><td>${o.clientNom||"—"}</td>
+      <td style="color:#7070A0;font-size:0.82rem">${o.produitsVendeur || (o.nbArticles+" article(s)")}</td>
+      <td><strong>${(o.montantTotal||0).toLocaleString('fr-FR')} FCFA</strong></td>
+      <td><span class="badge ${cls}">${label}</span></td><td style="color:#7070A0;font-size:0.82rem">${date}</td></tr>`;
+  }).join("");
+}
+function STATUS_CLS(s) { return {"LIVREE":"badge-delivered","EXPEDIEE":"badge-shipping","EN_ATTENTE":"badge-pending","ANNULEE":"badge-cancelled"}[s] || "badge-pending"; }
+function STATUS_LBL(s) { return {"LIVREE":"Livrée","EXPEDIEE":"Expédiée","EN_ATTENTE":"En attente","ANNULEE":"Annulée"}[s] || s; }
+
+/* ── MES PRODUITS ── */
+async function renderProducts() {
+  const tbody = document.getElementById("products-body");
+  if (!STATE.products.length) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;color:#7070A0">Vous n'avez encore aucun produit — Ajoutez-en un !</td></tr>`; return; }
+  tbody.innerHTML = STATE.products.map(p => {
+    const stockClass = p.stock <= 5 ? "stock-low" : p.stock <= 15 ? "stock-mid" : "stock-ok";
+    const oldPriceHtml = p.prixBarre ? `<br><span style="font-size:0.75rem;color:#7070A0;text-decoration:line-through">${p.prixBarre.toLocaleString('fr-FR')} FCFA</span>` : "";
+    // Affichage : image importée si dispo, sinon emoji texte
+    const iconHtml = (p.imageBase64 || p.imageUrl)
+      ? `<img src="${p.imageBase64 || p.imageUrl}" alt="${p.nom}" class="prod-img-cell">`
+      : `<span class="prod-emoji-text">${p.emoji || "📦"}</span>`;
+    return `<tr>
+      <td><div class="prod-cell"><div class="prod-emoji">${iconHtml}</div><div><div class="prod-name">${p.nom}</div><div class="prod-meta">${p.description||""}</div></div></div></td>
+      <td>${p.categorie}</td>
+      <td><strong>${(p.prix||0).toLocaleString('fr-FR')} FCFA</strong>${oldPriceHtml}</td>
+      <td class="${stockClass}">${p.stock} unités</td>
+      <td><span class="badge ${p.enPromotion?'badge-promo':'badge-normal'}">${p.enPromotion?"Promo":"Normal"}</span></td>
+      <td><button class="btn-icon edit" onclick="openEditModal(${p.id})"><i class="fa-solid fa-pen"></i> Modifier</button>
+          <button class="btn-icon del" onclick="deleteProductItem(${p.id})"><i class="fa-solid fa-trash"></i> Suppr.</button></td>
+    </tr>`;
+  }).join("");
+}
+
+/* ── COMMANDES REÇUES ── */
+async function renderOrders() {
+  const tbody = document.getElementById("orders-body");
+  if (!STATE.orders.length) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:2rem;color:#7070A0">Aucune commande reçue</td></tr>`; return; }
+  tbody.innerHTML = STATE.orders.map((o, idx) => {
+    const cls = STATUS_CLS(o.statut);
+    const date = new Date(o.dateCommande || Date.now()).toLocaleDateString("fr-FR");
+    let livreurCell;
+    if (o.livreurNom) {
+      const enAttenteDepart = o.statut === "EN_ATTENTE";
+      livreurCell = `<span style="color:#1E8449;font-weight:600"><i class="fa-solid fa-truck-fast"></i> ${o.livreurNom}</span>` +
+        (enAttenteDepart ? `<div style="font-size:0.72rem;color:#F39C12">En attente de départ</div>` : "");
+    } else if (o.statut === "EN_ATTENTE" && STATE.livreursDisponibles.length) {
+      livreurCell = `<select class="status-select" onchange="doAssignerLivreur('${o.id}', this.value, ${idx})">
+               <option value="">Assigner…</option>
+               ${STATE.livreursDisponibles.filter(l=>!l.bloque).map(l => `<option value="${l.id}">${l.prenom} ${l.nom}${l.livreurDeGroupe?` (groupe · ${l.proprietaireNom})`:''} — ${l.colisEnAttenteDepart} en attente</option>`).join("")}
+             </select>`;
+    } else {
+      livreurCell = `<span style="color:#9090B8;font-size:0.78rem">${o.statut === "EN_ATTENTE" ? "Aucun livreur" : "—"}</span>`;
+    }
+    return `<tr>
+      <td><strong>${o.reference||o.id}</strong></td><td>${o.clientNom||"—"}</td>
+      <td style="color:#7070A0;font-size:0.82rem">${o.produitsVendeur || (o.nbArticles+" article(s)")}</td>
+      <td><strong>${(o.montantTotal||0).toLocaleString('fr-FR')} FCFA</strong>${o.tarifLivraison?`<div style="font-size:0.72rem;color:#7070A0">+ ${o.tarifLivraison.toLocaleString('fr-FR')} FCFA livraison</div>`:''}</td>
+      <td><span class="badge ${cls}">${STATUS_LBL(o.statut)}</span></td>
+      <td>${o.statut === "ANNULEE" || o.statut === "LIVREE" ? "—" : `<select class="status-select" onchange="changeStatus('${o.id}', this.value, ${idx})">
+            <option value="EN_ATTENTE" ${o.statut==="EN_ATTENTE"?"selected":""}>En attente</option>
+            <option value="ANNULEE">Annuler</option>
+          </select>`}</td>
+      <td>${livreurCell}</td>
+      <td style="color:#7070A0;font-size:0.82rem">${date}</td></tr>`;
+  }).join("");
+}
+async function changeStatus(orderId, newStatut, localIdx) {
+  if (!usingDemoData) {
+    const { error } = await updateOrderStatus(orderId, newStatut);
+    if (error && error !== "NETWORK_ERROR") { showToast(error, "error"); renderOrders(); return; }
+  }
+  STATE.orders[localIdx].statut = newStatut;
+  document.getElementById("pending-badge").textContent = STATE.orders.filter(o => o.statut === "EN_ATTENTE").length;
+  showToast("Statut mis à jour ✓", "success");
+  renderOrders();
+}
+/* Assigner un livreur fait aussi passer la commande à EXPEDIEE côté serveur
+   (le livreur part avec le colis) — voir CommandeService.assignerLivreur. */
+/* L'assignation met juste le colis "de côté" chez le livreur — la commande
+   reste EN_ATTENTE tant qu'il n'est pas réellement parti (voir
+   doFairePartirTournee). Le client peut donc encore l'annuler jusque-là. */
+async function doAssignerLivreur(orderId, livreurId, localIdx) {
+  if (!livreurId) return;
+  if (!usingDemoData) {
+    const { error } = await assignerLivreur(orderId, livreurId);
+    if (error && error !== "NETWORK_ERROR") { showToast(error, "error"); renderOrders(); return; }
+  }
+  const l = STATE.livreursDisponibles.find(x => String(x.id) === String(livreurId));
+  STATE.orders[localIdx].livreurNom = l ? `${l.prenom} ${l.nom}` : "Livreur";
+  if (l) l.colisEnAttenteDepart = (l.colisEnAttenteDepart || 0) + 1;
+  showToast("Colis mis de côté pour ce livreur ✓ — il doit encore partir avec sa tournée", "success");
+  renderOrders();
+}
+
+/* ── MES LIVREURS ── */
+async function renderLivreurs() {
+  const tbody = document.getElementById("livreurs-body");
+  if (!STATE.livreurs.length) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2rem;color:#7070A0">Aucun livreur pour le moment</td></tr>`; return; }
+  tbody.innerHTML = STATE.livreurs.map(l => `
+    <tr>
+      <td><strong>${l.prenom} ${l.nom}</strong></td>
+      <td style="color:#7070A0;font-size:0.82rem">${l.email}</td>
+      <td style="color:#7070A0;font-size:0.82rem">${l.telephone||"—"}</td>
+      <td>${l.colisEnAttenteDepart > 0
+            ? `<button class="btn-icon star active" onclick="doFairePartirTournee(${l.id})"><i class="fa-solid fa-truck-fast"></i> Faire partir (${l.colisEnAttenteDepart})</button>`
+            : `<span style="color:#9090B8;font-size:0.82rem">Aucun</span>`}</td>
+      <td>${l.livraisonsEnCours || 0}</td>
+      <td><span class="badge ${l.bloque?'badge-blocked':'badge-active'}">${l.bloque?'Bloqué':'Actif'}</span></td>
+      <td><button class="btn-icon view" onclick="messageLivreur(${l.id})">Message</button>
+          <button class="btn-icon block" onclick="doToggleLivreur(${l.id}, ${!l.bloque})">${l.bloque?'Débloquer':'Bloquer'}</button></td>
+    </tr>`).join("");
+}
+async function doFairePartirTournee(livreurId) {
+  const l = STATE.livreurs.find(x => x.id === livreurId);
+  if (!confirm(`Faire partir ${l?.prenom||'ce livreur'} avec ses ${l?.colisEnAttenteDepart||0} colis en attente ?\nLe tarif de livraison sera calculé maintenant, selon le nombre de colis.`)) return;
+  if (!usingDemoData) {
+    const { error } = await fairePartirTournee(livreurId);
+    if (error) { showToast(error, "error"); return; }
+  }
+  STATE.orders.filter(o => o.livreurId === livreurId || (o.livreurNom && !usingDemoData)).forEach(o => { if (o.statut === "EN_ATTENTE") o.statut = "EXPEDIEE"; });
+  if (l) { l.livraisonsEnCours = (l.livraisonsEnCours||0) + (l.colisEnAttenteDepart||0); l.colisEnAttenteDepart = 0; }
+  showToast("La tournée est partie ✓", "success");
+  renderLivreurs();
+  renderOrders();
+}
+
+/* ── Groupes de livraison ── */
+function renderGroupes() {
+  const mesBox = document.getElementById("mesGroupesList");
+  const tousBox = document.getElementById("tousGroupesList");
+
+  if (!STATE.mesGroupes.length) {
+    mesBox.innerHTML = `<p class="text-sm text-muted">Vous n'avez créé ni rejoint aucun groupe.</p>`;
+  } else {
+    mesBox.innerHTML = STATE.mesGroupes.map(g => `
+      <div class="delivery-card" style="margin-bottom:0.75rem">
+        <strong>${g.nom}</strong>
+        <div style="font-size:0.8rem;color:#7070A0">Créé par ${g.createurNom} · ${g.nbLivreurs} livreur(s) · ${g.nbMembres} membre(s)</div>
+        ${g.createurId !== CURRENT_VENDEUR_ID ? `<div style="display:flex;gap:6px;margin-top:6px">
+          <button class="btn-icon view" onclick="messageLivreur(${g.createurId})">Message au créateur</button>
+          <button class="btn-icon del" onclick="doQuitterGroupe(${g.id})">Quitter le groupe</button>
+        </div>` : `<span style="font-size:0.75rem;color:#2D1B69;font-weight:600">Vous êtes le créateur</span>`}
+      </div>`).join("");
+  }
+
+  const disponibles = STATE.tousGroupes.filter(g => !g.estMembre);
+  if (!disponibles.length) {
+    tousBox.innerHTML = `<p class="text-sm text-muted">Aucun autre groupe à rejoindre pour le moment.</p>`;
+  } else {
+    tousBox.innerHTML = disponibles.map(g => `
+      <div class="delivery-card" style="margin-bottom:0.75rem">
+        <strong>${g.nom}</strong>
+        <div style="font-size:0.8rem;color:#7070A0">Créé par ${g.createurNom} · ${g.nbLivreurs} livreur(s) · ${g.nbMembres} membre(s)</div>
+        <button class="btn-primary" style="margin-top:6px;padding:6px 14px;font-size:0.82rem;width:fit-content" onclick="doRejoindreGroupe(${g.id})">Rejoindre</button>
+      </div>`).join("");
+  }
+}
+async function doRejoindreGroupe(id) {
+  const { error } = await rejoindreGroupe(id);
+  if (error) { showToast(error, "error"); return; }
+  showToast("Groupe rejoint ✓ — vous pouvez maintenant assigner ses livreurs", "success");
+  await loadAll();
+  renderGroupes();
+}
+async function doQuitterGroupe(id) {
+  if (!confirm("Quitter ce groupe ? Vous ne pourrez plus assigner vos commandes à ses livreurs.")) return;
+  const { error } = await quitterGroupe(id);
+  if (error) { showToast(error, "error"); return; }
+  showToast("Groupe quitté", "success");
+  await loadAll();
+  renderGroupes();
+}
+function openGroupeModal() {
+  document.getElementById("gr-nom").value = "";
+  document.getElementById("groupe-modal").classList.add("open");
+}
+function closeGroupeModal() { document.getElementById("groupe-modal").classList.remove("open"); }
+async function saveGroupe() {
+  const nom = document.getElementById("gr-nom").value.trim();
+  if (!nom) { showToast("Le nom du groupe est requis", "error"); return; }
+  const btn = document.getElementById("gr-save-btn");
+  btn.disabled = true; btn.innerHTML = `<span class="spinner"></span>Création…`;
+  const { error } = await creerGroupeLivraison(nom);
+  btn.disabled = false; btn.textContent = "Créer le groupe";
+  if (error) { showToast(error, "error"); return; }
+  showToast("Groupe créé ✓", "success");
+  closeGroupeModal();
+  await loadAll();
+  renderGroupes();
+}
+async function doToggleLivreur(id, bloque) {
+  if (!usingDemoData) {
+    const { error } = await toggleLivreurBlocage(id, bloque);
+    if (error) { showToast(error, "error"); return; }
+  }
+  const l = STATE.livreurs.find(x => x.id === id); if (l) l.bloque = bloque;
+  showToast(bloque ? "Livreur bloqué" : "Livreur débloqué", "success");
+  renderLivreurs();
+}
+async function messageLivreur(livreurId) {
+  const { data, error } = await demarrerConversation({ autreUtilisateurId: livreurId });
+  if (error) { showToast(error, "error"); return; }
+  window.location.href = `../messagerie/Messagerie.html?conv=${data.id}`;
+}
+function openLivreurModal() {
+  ["lv-nom","lv-prenom","lv-tel","lv-email","lv-pwd"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("livreur-modal").classList.add("open");
+}
+function closeLivreurModal() { document.getElementById("livreur-modal").classList.remove("open"); }
+async function saveLivreur() {
+  const nom = document.getElementById("lv-nom").value.trim();
+  const prenom = document.getElementById("lv-prenom").value.trim();
+  const telephone = document.getElementById("lv-tel").value.trim();
+  const email = document.getElementById("lv-email").value.trim();
+  const password = document.getElementById("lv-pwd").value;
+  if (!nom || !prenom || !telephone || !email || password.length < 6) {
+    showToast("Tous les champs sont obligatoires (mot de passe : 6 caractères minimum)", "error");
+    return;
+  }
+  const btn = document.getElementById("lv-save-btn");
+  btn.disabled = true; btn.innerHTML = `<span class="spinner"></span>Création…`;
+  const { data, error } = await creerLivreur({ nom, prenom, telephone, email, password });
+  btn.disabled = false; btn.textContent = "Créer le compte";
+  if (error) { showToast(error, "error"); return; }
+  STATE.livreurs.push(data || { nom, prenom, telephone, email, bloque: false, livraisonsEnCours: 0 });
+  showToast("Livreur créé ✓ Il peut se connecter avec cet email et ce mot de passe", "success");
+  closeLivreurModal();
+  renderLivreurs();
+}
+
+/* ── MODAL PRODUIT ── */
+
+/** Affiche/cache le champ de catégorie libre selon la sélection */
+function onCatChange(sel) {
+  const customInput = document.getElementById("m-cat-custom");
+  if (sel.value === "__AUTRE__") {
+    customInput.style.display = "block";
+    customInput.focus();
+  } else {
+    customInput.style.display = "none";
+    customInput.value = "";
+  }
+}
+
+/** Lit la catégorie finale (liste ou champ libre) */
+function getCategorieValue() {
+  const sel = document.getElementById("m-cat");
+  if (sel.value === "__AUTRE__") {
+    const custom = document.getElementById("m-cat-custom").value.trim();
+    return custom || "Autre";
+  }
+  return sel.value;
+}
+
+/** Réinitialise le champ catégorie dans le modal */
+function resetCatField(categorie = "Chaussures") {
+  const sel = document.getElementById("m-cat");
+  const customInput = document.getElementById("m-cat-custom");
+  // Vérifier si la catégorie est dans la liste standard
+  const options = Array.from(sel.options).map(o => o.value);
+  if (options.includes(categorie)) {
+    sel.value = categorie;
+    customInput.style.display = "none";
+    customInput.value = "";
+  } else {
+    // Catégorie personnalisée
+    sel.value = "__AUTRE__";
+    customInput.style.display = "block";
+    customInput.value = categorie;
+  }
+}
+
+function openModal() {
+  editingProductId = null;
+  document.getElementById("modal-title").textContent = "Ajouter un produit";
+  document.getElementById("modal-save-btn").textContent = "Enregistrer";
+  ["m-name","m-desc"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("m-price").value = ""; document.getElementById("m-stock").value = ""; document.getElementById("m-old-price").value = "";
+  document.getElementById("m-promo").checked = false;
+  resetCatField("Chaussures");
+  resetImageWidget([]);
+  document.getElementById("product-modal").classList.add("open");
+}
+function openEditModal(productId) {
+  const p = STATE.products.find(x => x.id === productId);
+  if (!p) return;
+  editingProductId = productId;
+  document.getElementById("modal-title").textContent = "Modifier le produit";
+  document.getElementById("modal-save-btn").textContent = "Mettre à jour";
+  document.getElementById("m-name").value = p.nom || ""; document.getElementById("m-price").value = p.prix || "";
+  document.getElementById("m-stock").value = p.stock || "";
+  document.getElementById("m-desc").value = p.description || "";
+  document.getElementById("m-old-price").value = p.prixBarre || ""; document.getElementById("m-promo").checked = p.enPromotion || false;
+  resetCatField(p.categorie || "Chaussures");
+  // Restaurer les photos existantes dans la galerie (les anciens produits
+  // avec un simple emoji n'ont pas d'image : le vendeur devra en uploader
+  // au moins une pour pouvoir enregistrer sa modification — voir saveProduct()).
+  resetImageWidget(p.images && p.images.length ? p.images : (p.imageBase64 || p.imageUrl ? [p.imageBase64 || p.imageUrl] : []));
+  document.getElementById("product-modal").classList.add("open");
+}
+function closeModal() {
+  document.getElementById("product-modal").classList.remove("open");
+  resetImageWidget([]);
+}
+
+async function saveProduct() {
+  const nom = document.getElementById("m-name").value.trim();
+  const prix = parseInt(document.getElementById("m-price").value);
+  const stock = parseInt(document.getElementById("m-stock").value);
+  if (!nom || isNaN(prix) || isNaN(stock)) { showToast("Nom, prix et stock sont obligatoires", "error"); return; }
+
+  if (!currentImages.length) {
+    document.getElementById("m-img-err").style.display = "block";
+    showToast("Veuillez importer au moins une photo du produit", "error");
+    return;
+  }
+  document.getElementById("m-img-err").style.display = "none";
+
+  const payload = {
+    nom, prix, stock,
+    categorie: getCategorieValue(),  // liste standard OU champ libre
+    images: currentImages,
+    imageBase64: currentImages[0],
+    description: document.getElementById("m-desc").value.trim(),
+    prixBarre: parseInt(document.getElementById("m-old-price").value) || null,
+    enPromotion: document.getElementById("m-promo").checked,
+  };
+
+  const saveBtn = document.getElementById("modal-save-btn");
+  saveBtn.disabled = true; saveBtn.innerHTML = `<span class="spinner"></span>Enregistrement…`;
+
+  let result = { data: null, error: null };
+  if (!usingDemoData) {
+    result = editingProductId ? await updateProduct(editingProductId, payload) : await createProduct(payload);
+  }
+  saveBtn.disabled = false; saveBtn.textContent = editingProductId ? "Mettre à jour" : "Enregistrer";
+
+  if (result.error && result.error !== "NETWORK_ERROR") { showToast(result.error, "error"); return; }
+
+  if (editingProductId) {
+    const idx = STATE.products.findIndex(x => x.id === editingProductId);
+    if (idx !== -1) STATE.products[idx] = { ...STATE.products[idx], ...payload };
+    showToast("Produit mis à jour ✓", "success");
+  } else {
+    STATE.products.push(result.data || { id: Date.now(), ...payload });
+    showToast("Produit ajouté ✓", "success");
+  }
+  closeModal(); renderProducts();
+  setStatCard("s-products", STATE.products.length, `${STATE.products.length} produit(s) en ligne`);
+}
+
+async function deleteProductItem(productId) {
+  if (!confirm("Supprimer ce produit définitivement ?")) return;
+  if (!usingDemoData) {
+    const { error } = await deleteProduct(productId);
+    if (error && error !== "NETWORK_ERROR") { showToast(error, "error"); return; }
+  }
+  STATE.products = STATE.products.filter(x => x.id !== productId);
+  showToast("Produit supprimé", "error");
+  renderProducts();
+  setStatCard("s-products", STATE.products.length, `${STATE.products.length} produit(s) en ligne`);
+}
+
+/* ── ROUTER SPA ── */
+function renderLivreursSection() { renderLivreurs(); renderGroupes(); }
+const SECTION_RENDER = { dashboard: renderDashboard, products: renderProducts, orders: renderOrders, livreurs: renderLivreursSection };
+const SECTION_TITLES = { dashboard: "Tableau de bord vendeur", products: "Mes produits", orders: "Commandes reçues" };
+function goSection(id) {
+  document.querySelectorAll(".admin-section").forEach(s => s.classList.remove("active"));
+  document.querySelectorAll(".menu-item").forEach(m => m.classList.remove("active"));
+  document.getElementById(`sec-${id}`).classList.add("active");
+  document.getElementById(`mi-${id}`)?.classList.add("active");
+  document.getElementById("topbar-title").textContent = SECTION_TITLES[id] || id;
+  if (SECTION_RENDER[id]) SECTION_RENDER[id]();
+}
+function filterTable(tbodyId, query) {
+  const q = query.toLowerCase();
+  document.querySelectorAll(`#${tbodyId} tr`).forEach(row => { row.style.display = row.textContent.toLowerCase().includes(q) ? "" : "none"; });
+}
+
+/* ════════════════════════════════════
+   Gestion du widget upload image
+   Les vendeurs ne peuvent charger qu'une vraie image (pas d'emoji au choix) :
+   l'image est obligatoire pour enregistrer un produit — voir saveProduct().
+   ════════════════════════════════════ */
+
+/** Réinitialise le widget : pas d'image sélectionnée, ou affiche imageDataOrUrl si fourni */
+/* ── Galerie de photos produit (plusieurs images) ──
+   MAX_IMAGES : bien au-dessus des 8 minimum demandées, tout en restant
+   raisonnable côté taille de page (chaque photo est stockée en base64). */
+const MAX_IMAGES = 10;
+let currentImages = [];
+
+function renderImageGallery() {
+  const grid = document.getElementById("img-gallery-grid");
+  const thumbs = currentImages.map((src, i) => `
+    <div class="img-gallery-thumb">
+      <img src="${src}" alt="Photo ${i+1}">
+      ${i===0 ? '<div class="cover-badge">Couverture</div>' : ''}
+      <button type="button" class="thumb-remove-btn" onclick="removeGalleryImage(${i})" title="Retirer">✕</button>
+    </div>`).join("");
+  const addSlot = currentImages.length < MAX_IMAGES
+    ? `<div class="img-gallery-add" onclick="triggerImgUpload()" title="Ajouter une photo"><i class="fa-solid fa-plus"></i></div>` : "";
+  grid.innerHTML = thumbs + addSlot;
+}
+function resetImageWidget(images = []) {
+  currentImages = Array.isArray(images) ? images.slice(0, MAX_IMAGES) : (images ? [images] : []);
+  document.getElementById("m-img-file").value = "";
+  renderImageGallery();
+}
+function removeGalleryImage(index) {
+  currentImages.splice(index, 1);
+  renderImageGallery();
+}
+
+function triggerImgUpload() {
+  document.getElementById("m-img-file").click();
+}
+
+/** Lit les fichiers choisis en base64 et les ajoute à la galerie */
+function handleImgUpload(event) {
+  const files = Array.from(event.target.files || []);
+  if (!files.length) return;
+  const room = MAX_IMAGES - currentImages.length;
+  if (files.length > room) showToast(`Seules les ${room} premières photos ont été gardées (maximum ${MAX_IMAGES})`, "warning");
+  files.slice(0, room).forEach(file => {
+    if (!file.type.startsWith("image/")) { showToast(`"${file.name}" n'est pas une image`, "error"); return; }
+    if (file.size > 2 * 1024 * 1024) { showToast(`"${file.name}" dépasse 2 Mo`, "error"); return; }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      currentImages.push(e.target.result);
+      renderImageGallery();
+      document.getElementById("m-img-err").style.display = "none";
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function globalSearch(q) { if (q.length >= 2) showToast(`Recherche de "${q}"…`); }
+function goProfil() { window.location.href = "../profil/Profil.html"; }
+async function doLogout() { if (!confirm("Se déconnecter ?")) return; await logout(); window.location.href = "../home/Accueil.html"; }
+</script>
+</body>
+</html>

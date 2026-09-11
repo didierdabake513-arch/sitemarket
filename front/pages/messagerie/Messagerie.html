@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assigamé – Messagerie</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../styles/base.css">
+<link rel="stylesheet" href="../../styles/components.css">
+<link rel="stylesheet" href="../../styles/buttons.css">
+<style>
+.topbar {
+  background: #2D1B69; height: 62px; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 16px rgba(45,27,105,0.3);
+}
+.topbar-logo { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 1.3rem; color: #fff; text-decoration: none; display: flex; align-items: center; gap: 6px; }
+
+.msg-layout {
+  display: grid; grid-template-columns: 320px 1fr;
+  max-width: 1080px; margin: 1.5rem auto; padding: 0 1.5rem;
+  height: calc(100vh - 110px); gap: 1.25rem;
+}
+.conv-panel { background: #fff; border-radius: 14px; box-shadow: 0 4px 20px rgba(45,27,105,0.08); overflow: hidden; display: flex; flex-direction: column; }
+.conv-panel-header { padding: 1rem 1.25rem; border-bottom: 1px solid #F0EEFB; display: flex; justify-content: space-between; align-items: center; }
+.conv-panel-header h2 { font-family: 'Sora', sans-serif; font-size: 1.05rem; color: #2D1B69; }
+.conv-list { flex: 1; overflow-y: auto; }
+.conv-item { display: flex; align-items: center; gap: 10px; padding: 0.9rem 1.1rem; cursor: pointer; border-bottom: 1px solid #F7F6FC; transition: background 0.15s; }
+.conv-item:hover, .conv-item.active { background: #F8F7FD; }
+.conv-avatar { width: 40px; height: 40px; border-radius: 50%; background: #F0EEFB; color: #2D1B69; display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; }
+.conv-info { flex: 1; min-width: 0; }
+.conv-name { font-weight: 700; font-size: 0.9rem; color: #1A1A2E; display: flex; align-items: center; gap: 6px; }
+.conv-role-tag { font-size: 0.65rem; font-weight: 700; padding: 1px 7px; border-radius: 10px; }
+.conv-preview { font-size: 0.8rem; color: #7070A0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.conv-unread { background: #F5A623; color: #2D1B69; font-size: 0.7rem; font-weight: 800; border-radius: 10px; padding: 2px 8px; flex-shrink: 0; }
+
+.chat-panel { background: #fff; border-radius: 14px; box-shadow: 0 4px 20px rgba(45,27,105,0.08); display: flex; flex-direction: column; overflow: hidden; }
+.chat-header { padding: 1rem 1.25rem; border-bottom: 1px solid #F0EEFB; display: flex; align-items: center; gap: 10px; }
+.chat-header .conv-name { font-size: 1rem; }
+.chat-context { font-size: 0.78rem; color: #7070A0; }
+.chat-messages { flex: 1; overflow-y: auto; padding: 1.25rem; display: flex; flex-direction: column; gap: 10px; }
+.msg-bubble { max-width: 70%; padding: 0.6rem 0.9rem; border-radius: 14px; font-size: 0.88rem; line-height: 1.4; }
+.msg-bubble.mine { align-self: flex-end; background: #2D1B69; color: #fff; border-bottom-right-radius: 4px; }
+.msg-bubble.theirs { align-self: flex-start; background: #F0EEFB; color: #1A1A2E; border-bottom-left-radius: 4px; }
+.msg-time { font-size: 0.68rem; opacity: 0.65; margin-top: 3px; }
+.chat-input-row { display: flex; gap: 10px; padding: 1rem; border-top: 1px solid #F0EEFB; }
+.chat-input-row input { flex: 1; border: 2px solid #DDD9F5; border-radius: 24px; padding: 10px 18px; font-size: 0.9rem; outline: none; }
+.chat-input-row input:focus { border-color: #2D1B69; }
+.chat-input-row button { background: #2D1B69; color: #fff; border: none; border-radius: 50%; width: 42px; height: 42px; cursor: pointer; flex-shrink: 0; }
+
+.empty-chat { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #9090B8; gap: 0.75rem; }
+
+@media (max-width: 768px) {
+  .msg-layout { grid-template-columns: 1fr; height: auto; }
+  .chat-panel { min-height: 500px; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="topbar-logo" href="../home/Accueil.html"><i class="fa-solid fa-bag-shopping brand-icon"></i> <span class="brand-my">My</span> <span class="brand-b">B</span> Assigamé</a>
+  <button class="btn-topbar" onclick="goBack()"><i class="fa-solid fa-arrow-left"></i> Retour</button>
+</div>
+
+<div class="msg-layout">
+  <div class="conv-panel">
+    <div class="conv-panel-header">
+      <h2><i class="fa-solid fa-comments"></i> Messages</h2>
+      <button class="btn-icon view" onclick="openNewMsgModal()" title="Nouveau message"><i class="fa-solid fa-pen"></i></button>
+    </div>
+    <div class="conv-list" id="convList"><p style="padding:1.5rem;color:#7070A0;font-size:0.85rem">Chargement…</p></div>
+  </div>
+
+  <div class="chat-panel" id="chatPanel">
+    <div class="empty-chat">
+      <i class="fa-solid fa-comment-dots" style="font-size:2.5rem"></i>
+      <p>Choisissez une conversation pour commencer</p>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOUVEAU MESSAGE (par email — utile vendeur ↔ vendeur / vendeur ↔ livreur) -->
+<div class="modal-overlay" id="new-msg-modal">
+  <div class="modal-box">
+    <div class="modal-title">Nouveau message</div>
+    <p class="text-sm text-muted" style="margin-bottom:1rem">
+      Entrez l'email du compte à contacter (vendeur ou livreur selon votre rôle).
+    </p>
+    <div class="form-group"><label>Email du destinataire</label><input class="form-control no-icon" type="email" id="nm-email" placeholder="destinataire@exemple.com"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeNewMsgModal()">Annuler</button>
+      <button class="btn-primary" style="flex:1" id="nm-save-btn" onclick="startNewConversation()">Démarrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="../../services/api.js"></script>
+<script src="../../services/authService.js"></script>
+<script src="../../services/messageService.js"></script>
+<script src="../../utils/toast.js"></script>
+<script>
+let CURRENT_USER = null;
+let CONVERSATIONS = [];
+let ACTIVE_CONV_ID = null;
+let POLL_TIMER = null;
+
+window.addEventListener("DOMContentLoaded", async () => {
+  CURRENT_USER = getCurrentUser();
+  if (!CURRENT_USER) { window.location.href = "../auth/Auth.html?return=" + encodeURIComponent(window.location.href); return; }
+  await loadConversations();
+
+  const params = new URLSearchParams(window.location.search);
+  const convParam = params.get("conv");
+  if (convParam) openConversation(parseInt(convParam));
+
+  POLL_TIMER = setInterval(loadConversations, 8000);
+});
+
+function goBack() {
+  if (document.referrer && document.referrer.indexOf(window.location.origin) === 0) window.history.back();
+  else window.location.href = "../home/Accueil.html";
+}
+
+const ROLE_TAG_CLASS = { ADMIN: "badge-admin", VENDEUR: "badge-vendeur", CLIENT: "badge-client", LIVREUR: "badge-livreur" };
+const ROLE_TAG_LABEL = { ADMIN: "Admin", VENDEUR: "Vendeur", CLIENT: "Client", LIVREUR: "Livreur" };
+
+async function loadConversations() {
+  const { data, error } = await getMesConversations();
+  if (error) { return; }
+  CONVERSATIONS = data;
+  renderConvList();
+}
+
+function renderConvList() {
+  const list = document.getElementById("convList");
+  if (!CONVERSATIONS.length) {
+    list.innerHTML = `<p style="padding:1.5rem;color:#7070A0;font-size:0.85rem">Aucune conversation pour le moment.</p>`;
+    return;
+  }
+  list.innerHTML = CONVERSATIONS.map(c => `
+    <div class="conv-item ${c.id===ACTIVE_CONV_ID?'active':''}" onclick="openConversation(${c.id})">
+      <div class="conv-avatar">${(c.autreParticipantNom||"?").charAt(0)}</div>
+      <div class="conv-info">
+        <div class="conv-name">${c.autreParticipantNom} <span class="conv-role-tag ${ROLE_TAG_CLASS[c.autreParticipantRole]||''}">${ROLE_TAG_LABEL[c.autreParticipantRole]||c.autreParticipantRole}</span></div>
+        <div class="conv-preview">${c.produitContexteNom ? `À propos de « ${c.produitContexteNom} » — ` : ""}${c.dernierMessage || "Aucun message"}</div>
+      </div>
+      ${c.nbNonLus > 0 ? `<span class="conv-unread">${c.nbNonLus}</span>` : ""}
+    </div>`).join("");
+}
+
+async function openConversation(convId) {
+  ACTIVE_CONV_ID = convId;
+  renderConvList();
+  const conv = CONVERSATIONS.find(c => c.id === convId);
+  const panel = document.getElementById("chatPanel");
+  panel.innerHTML = `
+    <div class="chat-header">
+      <div class="conv-avatar">${conv ? (conv.autreParticipantNom||"?").charAt(0) : "?"}</div>
+      <div>
+        <div class="conv-name">${conv ? conv.autreParticipantNom : ""}</div>
+        ${conv && conv.produitContexteNom ? `<div class="chat-context">À propos de « ${conv.produitContexteNom} »</div>` : ""}
+      </div>
+    </div>
+    <div class="chat-messages" id="chatMessages"><p style="text-align:center;color:#9090B8;font-size:0.85rem">Chargement…</p></div>
+    <div class="chat-input-row">
+      <input type="text" id="chatInput" placeholder="Écrire un message…" onkeydown="if(event.key==='Enter') sendChatMessage()">
+      <button onclick="sendChatMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>`;
+
+  const { data, error } = await getMessagesDe(convId);
+  const box = document.getElementById("chatMessages");
+  if (error) { box.innerHTML = `<p style="text-align:center;color:#E74C3C;font-size:0.85rem">${error}</p>`; return; }
+  renderMessages(data);
+  loadConversations();
+}
+
+function renderMessages(messages) {
+  const box = document.getElementById("chatMessages");
+  if (!box) return;
+  if (!messages.length) {
+    box.innerHTML = `<p style="text-align:center;color:#9090B8;font-size:0.85rem">Aucun message — dites bonjour !</p>`;
+    return;
+  }
+  box.innerHTML = messages.map(m => `
+    <div class="msg-bubble ${m.deMoi?'mine':'theirs'}">
+      ${escapeHtml(m.contenu)}
+      <div class="msg-time">${new Date(m.dateEnvoi).toLocaleString('fr-FR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</div>
+    </div>`).join("");
+  box.scrollTop = box.scrollHeight;
+}
+function escapeHtml(s) {
+  const d = document.createElement("div"); d.textContent = s; return d.innerHTML;
+}
+
+async function sendChatMessage() {
+  const input = document.getElementById("chatInput");
+  const contenu = input.value.trim();
+  if (!contenu || !ACTIVE_CONV_ID) return;
+  input.value = "";
+  const { data, error } = await envoyerMessage(ACTIVE_CONV_ID, contenu);
+  if (error) { showToast(error, "error"); return; }
+  const { data: allMessages } = await getMessagesDe(ACTIVE_CONV_ID);
+  renderMessages(allMessages);
+}
+
+function openNewMsgModal() {
+  document.getElementById("nm-email").value = "";
+  document.getElementById("new-msg-modal").classList.add("open");
+}
+function closeNewMsgModal() { document.getElementById("new-msg-modal").classList.remove("open"); }
+async function startNewConversation() {
+  const email = document.getElementById("nm-email").value.trim();
+  if (!email) { showToast("Email requis", "error"); return; }
+  const btn = document.getElementById("nm-save-btn");
+  btn.disabled = true; btn.innerHTML = `<span class="spinner"></span>…`;
+  const { data, error } = await demarrerConversation({ autreEmail: email });
+  btn.disabled = false; btn.textContent = "Démarrer";
+  if (error) { showToast(error, "error"); return; }
+  closeNewMsgModal();
+  await loadConversations();
+  openConversation(data.id);
+}
+</script>
+</body>
+</html>

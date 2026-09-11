@@ -1,0 +1,91 @@
+/* =============================================================
+   styles/base.css
+   Reset · Typographie · Grille · Helpers
+   Aucune variable CSS (:root) — valeurs directes partout
+   ============================================================= */
+
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css');
+
+/* ── RESET ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: #FAFAF8;
+  color: #1A1A2E;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── TYPOGRAPHIE ── */
+h1, h2, h3, h4, h5, h6 { font-family: 'Sora', sans-serif; line-height: 1.2; }
+a { text-decoration: none; color: inherit; }
+
+/* ── LAYOUT HELPERS ── */
+.flex          { display: flex; }
+.flex-center   { display: flex; align-items: center; justify-content: center; }
+.flex-between  { display: flex; align-items: center; justify-content: space-between; }
+.flex-col      { display: flex; flex-direction: column; }
+.gap-sm        { gap: 0.5rem; }
+.gap-md        { gap: 1rem; }
+.gap-lg        { gap: 1.5rem; }
+.grid-2        { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.grid-4        { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
+
+/* ── TEXTE ── */
+.text-muted   { color: #7070A0; }
+.text-primary { color: #2D1B69; }
+.text-gold    { color: #F5A623; }
+.text-success { color: #27AE60; }
+.text-danger  { color: #E74C3C; }
+.text-sm      { font-size: 0.82rem; }
+.text-xs      { font-size: 0.72rem; }
+.font-bold    { font-weight: 700; }
+.font-sora    { font-family: 'Sora', sans-serif; }
+
+/* ── DIVIDER ── */
+.divider { display: flex; align-items: center; gap: 10px; color: #7070A0; font-size: 0.8rem; margin: 1.2rem 0; }
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #DDD9F5; }
+
+/* ── SPINNER ── */
+.spinner {
+  display: inline-block; width: 16px; height: 16px;
+  border: 2.5px solid rgba(255,255,255,0.35); border-top-color: #fff;
+  border-radius: 50%; animation: spin 0.65s linear infinite;
+  vertical-align: middle; margin-right: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── SKELETON LOADER ── */
+.skeleton {
+  background: linear-gradient(90deg, #e8e4f5 25%, #f5f3ff 50%, #e8e4f5 75%);
+  background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 6px;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* ── ÉTAT VIDE ── */
+.empty-state { text-align: center; padding: 3rem; color: #7070A0; }
+.empty-state .empty-icon { font-size: 3.5rem; display: block; margin-bottom: 1rem; color: #2D1B69; }
+
+/* ── ICÔNES FONT AWESOME ── */
+.brand-icon { color: #F5A623; font-size: 1.1em; }
+.cat-icon, .product-icon { color: #4A30A0; }
+.product-img .product-icon, .detail-img-box .product-icon, .related-img .product-icon, .hero-card .product-icon {
+  font-size: 3.5rem; color: #4A30A0;
+}
+.detail-img-box .product-icon { font-size: 6rem; }
+.input-ico i, .mi-icon i, .profil-nav span i, .eye-btn i { pointer-events: none; }
+.pay-icon i { font-size: 1.8rem; color: #2D1B69; }
+.footer-col a i { margin-right: 6px; width: 1rem; text-align: center; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .grid-2 { grid-template-columns: 1fr; }
+  .grid-4 { grid-template-columns: 1fr 1fr; }
+  .hide-mobile { display: none !important; }
+}
+@media (max-width: 480px) {
+  .grid-4 { grid-template-columns: 1fr; }
+}
